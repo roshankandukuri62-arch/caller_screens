@@ -29,9 +29,11 @@ app.get('/', (req, res) => {
     res.status(200).json({ status: 'online', message: 'PDGMS Backend is running successfully!' });
 });
 
-// Login Route
+// Login Route with Diagnostic Logging
 app.post('/api/login', async (req, res) => {
     const { employee_id, password } = req.body;
+
+    console.log(`Attempting login for Employee ID: "${employee_id}"`);
 
     if (!employee_id || !password) {
         return res.status(400).json({ success: false, message: 'Employee ID and password are required.' });
@@ -40,10 +42,14 @@ app.post('/api/login', async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('employees')
-            .select('employee_id')
+            .select('*') // Select all columns to debug
             .eq('employee_id', employee_id)
             .eq('password', password)
             .single();
+
+        // Print what Supabase actually returned in Render logs
+        console.log('Supabase Error:', error);
+        console.log('Supabase Data Found:', data);
 
         if (error || !data) {
             return res.status(401).json({ success: false, message: 'Invalid credentials. Please try again.' });
