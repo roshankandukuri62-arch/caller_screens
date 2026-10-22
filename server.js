@@ -1,11 +1,9 @@
-﻿const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
-
 const app = express();
-
 
 // Allow requests from any frontend (like your Vercel app)
 app.use(cors({
@@ -14,25 +12,30 @@ app.use(cors({
     allowedHeaders: ['Content-Type']
 }));
 
-
 app.use(express.json());
-
 
 // Connect to Supabase using Render Environment Variables
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseUrl || !supabaseKey) {
+    console.error("Missing Supabase environment variables!");
+}
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Health Check Route (So visiting the base Render URL shows it's live)
+app.get('/', (req, res) => {
+    res.status(200).json({ status: 'online', message: 'PDGMS Backend is running successfully!' });
+});
 
 // Login Route
 app.post('/api/login', async (req, res) => {
     const { employee_id, password } = req.body;
 
-
     if (!employee_id || !password) {
         return res.status(400).json({ success: false, message: 'Employee ID and password are required.' });
     }
-
 
     try {
         const { data, error } = await supabase
@@ -42,11 +45,9 @@ app.post('/api/login', async (req, res) => {
             .eq('password', password)
             .single();
 
-
         if (error || !data) {
             return res.status(401).json({ success: false, message: 'Invalid credentials. Please try again.' });
         }
-
 
         return res.status(200).json({ 
             success: true, 
@@ -54,13 +55,11 @@ app.post('/api/login', async (req, res) => {
             redirectUrl: '/dashboard.html' 
         });
 
-
     } catch (err) {
         console.error('Server error during login:', err);
         return res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
