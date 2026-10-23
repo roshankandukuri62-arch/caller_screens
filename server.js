@@ -27,17 +27,18 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Make Supabase client accessible to route modules via app.locals
 app.locals.supabase = supabase;
 
-// Health Check Route (So visiting the base Render URL shows it's live)
+// Health Check Route
 app.get('/', (req, res) => {
     res.status(200).json({ status: 'online', message: 'PDGMS Backend is running successfully!' });
 });
 
-// Import and Mount Routers
+// Import Routers
 const authRouter = require('./routes/auth');
 const callsRouter = require('./routes/calls');
 
-app.use('/api', authRouter);       // Handles /api/login
-app.use('/api/calls', callsRouter); // Handles /api/calls/...
+// Mount Routers
+app.use('/api', authRouter);       
+app.use('/api/calls', callsRouter); 
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
