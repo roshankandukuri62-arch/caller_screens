@@ -24,48 +24,20 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Make Supabase client accessible to route modules via app.locals
+app.locals.supabase = supabase;
+
 // Health Check Route (So visiting the base Render URL shows it's live)
 app.get('/', (req, res) => {
     res.status(200).json({ status: 'online', message: 'PDGMS Backend is running successfully!' });
 });
 
-// Login Route with Diagnostic Logging
-app.post('/api/login', async (req, res) => {
-    const { employee_id, password } = req.body;
+// Import and Mount Routers
+const authRouter = require('./routes/auth');
+const callsRouter = require('./routes/calls');
 
-    console.log(`Attempting login for Employee ID: "${employee_id}"`);
-
-    if (!employee_id || !password) {
-        return res.status(400).json({ success: false, message: 'Employee ID and password are required.' });
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('employees')
-            .select('*') // Select all columns to debug
-            .eq('employee_id', employee_id)
-            .eq('password', password)
-            .single();
-
-        // Print what Supabase actually returned in Render logs
-        console.log('Supabase Error:', error);
-        console.log('Supabase Data Found:', data);
-
-        if (error || !data) {
-            return res.status(401).json({ success: false, message: 'Invalid credentials. Please try again.' });
-        }
-
-        return res.status(200).json({ 
-            success: true, 
-            message: 'Login successful', 
-            redirectUrl: '/dashboard.html' 
-        });
-
-    } catch (err) {
-        console.error('Server error during login:', err);
-        return res.status(500).json({ success: false, message: 'Internal server error.' });
-    }
-});
+app.use('/api', authRouter);       // Handles /api/login
+app.use('/api/calls', callsRouter); // Handles /api/calls/...
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
