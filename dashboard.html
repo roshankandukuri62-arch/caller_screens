@@ -63,10 +63,20 @@
                 <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight">PDGMS - Call Analytics Dashboard</h1>
                 <p class="text-sm font-medium text-pink-900/80 mt-1">Filter, inspect, and review call transcripts in real-time</p>
             </div>
-            <button onclick="window.location.href='/'" class="px-5 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-rose-600 font-bold text-sm border border-white transition-all shadow-sm flex items-center gap-2 cursor-pointer">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-                Sign Out
-            </button>
+            
+            <div class="flex items-center gap-3">
+                <!-- Log a Call Button Linked to call_logger.html -->
+                <button onclick="window.location.href='/call_logger.html'" class="px-5 py-2.5 rounded-2xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Log a Call
+                </button>
+
+                <!-- Sign Out Button -->
+                <button onclick="window.location.href='/'" class="px-5 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-rose-600 font-bold text-sm border border-white transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Sign Out
+                </button>
+            </div>
         </div>
 
         <!-- Stat Modules Grid -->
@@ -91,7 +101,7 @@
             </div>
         </div>
 
-        <!-- Filter Bar Hub (Set high z-index z-30 so dropdowns float over lower card) -->
+        <!-- Filter Bar Hub -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6 relative z-30 overflow-visible">
             <div class="flex items-center justify-between border-b border-pink-200/50 pb-4">
                 <h2 class="text-xl font-bold text-gray-800">Call Filter Matrix</h2>
@@ -166,7 +176,7 @@
             </div>
         </div>
 
-        <!-- Result Set Table (Set lower z-index z-10) -->
+        <!-- Result Set Table -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-4 relative z-10">
             <h2 class="text-xl font-bold text-gray-800">Filtered Calls Result Set</h2>
             <div class="overflow-x-auto">
