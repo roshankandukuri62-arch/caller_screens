@@ -3,6 +3,7 @@ const router = express.Router();
 
 // 1. Live Total Calls Made Counter
 router.get('/stats', async (req, res) => {
+    console.log('API Request: GET /api/calls/stats');
     const supabase = req.app.locals.supabase;
     try {
         const { data, error } = await supabase.from('call_details').select('id');
@@ -10,6 +11,7 @@ router.get('/stats', async (req, res) => {
         
         // Count distinct call IDs
         const uniqueCalls = new Set(data.map(row => row.id));
+        console.log(`Stats fetched successfully. Total unique calls: ${uniqueCalls.size}`);
         res.status(200).json({ calls_made: uniqueCalls.size });
     } catch (err) {
         console.error('Error fetching stats:', err);
@@ -19,8 +21,9 @@ router.get('/stats', async (req, res) => {
 
 // 2. Filter Options Endpoint for Dropdowns
 router.get('/filter-options/:field', async (req, res) => {
-    const supabase = req.app.locals.supabase;
     const { field } = req.params;
+    console.log(`API Request: GET /api/calls/filter-options/${field}`);
+    const supabase = req.app.locals.supabase;
 
     try {
         if (field === 'caller_name') {
@@ -58,6 +61,7 @@ router.get('/filter-options/:field', async (req, res) => {
 
 // 3. Search and Filter Calls Endpoint
 router.post('/search', async (req, res) => {
+    console.log('API Request: POST /api/calls/search with payload:', req.body);
     const supabase = req.app.locals.supabase;
     const { callId, durationGt, durationLt, outcome, callerName, companyKind, companyName, prospectRole, conversationContains } = req.body;
 
@@ -106,6 +110,7 @@ router.post('/search', async (req, res) => {
             }
         }
 
+        console.log(`Search completed. Returning ${formattedData.length} matching rows.`);
         res.status(200).json({ data: formattedData });
     } catch (err) {
         console.error('Error executing search query:', err);
@@ -115,8 +120,9 @@ router.post('/search', async (req, res) => {
 
 // 4. Get Full Transcript for a Specific Call ID
 router.get('/:id/transcript', async (req, res) => {
-    const supabase = req.app.locals.supabase;
     const { id } = req.params;
+    console.log(`API Request: GET /api/calls/${id}/transcript`);
+    const supabase = req.app.locals.supabase;
 
     try {
         // Fetch caller name for speaker labeling
@@ -143,6 +149,7 @@ router.get('/:id/transcript', async (req, res) => {
             Content: t.translated_content || t.turn_content
         }));
 
+        console.log(`Transcript fetched successfully for call ${id} with ${formattedTurns.length} turns.`);
         res.status(200).json({ turns: formattedTurns });
     } catch (err) {
         console.error('Error fetching transcript:', err);
