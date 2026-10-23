@@ -52,9 +52,10 @@
 
     <canvas id="bubbleCanvas"></canvas>
 
-    <div class="dashboard-container max-w-7xl mx-auto space-y-8">
+    <!-- Increased vertical spacing to space-y-12 -->
+    <div class="dashboard-container max-w-7xl mx-auto space-y-12">
         <!-- Header -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-20">
             <div>
                 <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/80 text-xs font-semibold text-pink-700 mb-2 border border-white">
                     <span>✨ Active Session</span>
@@ -69,7 +70,7 @@
         </div>
 
         <!-- Stat Modules Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-20">
             <div class="glass-panel p-5 rounded-2xl">
                 <div class="text-pink-600 font-bold text-xs uppercase tracking-wider mb-1">Live Total Calls Made</div>
                 <div id="liveTotalCalls" class="text-3xl font-black text-gray-800">Loading...</div>
@@ -90,8 +91,8 @@
             </div>
         </div>
 
-        <!-- Filter Bar Hub -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
+        <!-- Filter Bar Hub (Set high z-index z-30 so dropdowns float over lower card) -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6 relative z-30 overflow-visible">
             <div class="flex items-center justify-between border-b border-pink-200/50 pb-4">
                 <h2 class="text-xl font-bold text-gray-800">Call Filter Matrix</h2>
                 <div class="flex gap-3">
@@ -107,10 +108,10 @@
             <!-- The 8 Filter Boxes Grid -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- 1. Call ID -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Call ID</label>
-                    <input type="text" id="filterCallId" placeholder="Click or type to search..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownCallId" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterCallId" data-field="call_id" placeholder="Click or type to search..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownCallId" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 2. Call Duration -->
@@ -123,38 +124,38 @@
                 </div>
 
                 <!-- 3. Call Outcome -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Call Outcome</label>
-                    <input type="text" id="filterOutcome" placeholder="Search outcome..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownOutcome" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterOutcome" data-field="call_outcome" placeholder="Search outcome..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownOutcome" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 4. Caller Name -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Caller Name</label>
-                    <input type="text" id="filterCallerName" placeholder="Search caller..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownCallerName" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterCallerName" data-field="caller_name" placeholder="Search caller..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownCallerName" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 5. Company Kind -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Company Kind</label>
-                    <input type="text" id="filterCompanyKind" placeholder="Search kind..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownCompanyKind" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterCompanyKind" data-field="company_kind" placeholder="Search kind..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownCompanyKind" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 6. Company Name -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Company Name</label>
-                    <input type="text" id="filterCompanyName" placeholder="Search company..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownCompanyName" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterCompanyName" data-field="company_name" placeholder="Search company..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownCompanyName" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 7. Prospect Role -->
-                <div class="glass-panel p-4 rounded-2xl space-y-2">
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
                     <label class="text-xs font-bold text-pink-700 uppercase">Prospect Role</label>
-                    <input type="text" id="filterProspectRole" placeholder="Search role..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
-                    <div id="dropdownProspectRole" class="max-h-32 overflow-y-auto space-y-1 text-xs hidden bg-white/90 p-2 rounded-xl border border-white"></div>
+                    <input type="text" id="filterProspectRole" data-field="prospect_role" placeholder="Search role..." class="filter-input w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400" autocomplete="off">
+                    <div id="dropdownProspectRole" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
                 </div>
 
                 <!-- 8. Conversation Contains -->
@@ -165,8 +166,8 @@
             </div>
         </div>
 
-        <!-- Result Set Table -->
-        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-4">
+        <!-- Result Set Table (Set lower z-index z-10) -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-4 relative z-10">
             <h2 class="text-xl font-bold text-gray-800">Filtered Calls Result Set</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
@@ -205,14 +206,17 @@
 
     <!-- Frontend Client Logic -->
     <script>
+        const BACKEND_URL = 'https://caller-screens.onrender.com';
+
         // Fetch Live Total Calls on Page Load
         async function fetchLiveTotalCalls() {
             try {
-                const res = await fetch('/api/calls/stats');
+                const res = await fetch(`${BACKEND_URL}/api/calls/stats`);
                 const data = await res.json();
                 document.getElementById('liveTotalCalls').innerText = data.calls_made || 0;
             } catch (err) {
-                document.getElementById('liveTotalCalls').innerText = '1,935'; // fallback mockup
+                console.error('Failed to fetch stats:', err);
+                document.getElementById('liveTotalCalls').innerText = 'Error';
             }
         }
         window.addEventListener('DOMContentLoaded', fetchLiveTotalCalls);
@@ -233,6 +237,72 @@
         document.getElementById('durationGt').addEventListener('input', validateDuration);
         document.getElementById('durationLt').addEventListener('input', validateDuration);
 
+        // Interactive Dropdowns and Auto-complete for Filter Boxes
+        const filterFieldsConfig = [
+            { inputId: 'filterCallId', dropdownId: 'dropdownCallId', fieldName: 'call_id' },
+            { inputId: 'filterOutcome', dropdownId: 'dropdownOutcome', fieldName: 'call_outcome' },
+            { inputId: 'filterCallerName', dropdownId: 'dropdownCallerName', fieldName: 'caller_name' },
+            { inputId: 'filterCompanyKind', dropdownId: 'dropdownCompanyKind', fieldName: 'company_kind' },
+            { inputId: 'filterCompanyName', dropdownId: 'dropdownCompanyName', fieldName: 'company_name' },
+            { inputId: 'filterProspectRole', dropdownId: 'dropdownProspectRole', fieldName: 'prospect_role' }
+        ];
+
+        filterFieldsConfig.forEach(config => {
+            const input = document.getElementById(config.inputId);
+            const dropdown = document.getElementById(config.dropdownId);
+
+            let cachedOptions = [];
+
+            input.addEventListener('focus', async () => {
+                if (cachedOptions.length === 0) {
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/api/calls/filter-options/${config.fieldName}`);
+                        const data = await res.json();
+                        cachedOptions = data.options || [];
+                    } catch (e) {
+                        console.error(`Error loading options for ${config.fieldName}:`, e);
+                    }
+                }
+                showDropdown(cachedOptions, input, dropdown);
+            });
+
+            input.addEventListener('input', () => {
+                const query = input.value.toLowerCase();
+                const filtered = cachedOptions.filter(opt => String(opt).toLowerCase().includes(query));
+                showDropdown(filtered, input, dropdown);
+            });
+        });
+
+        function showDropdown(options, input, dropdown) {
+            dropdown.innerHTML = '';
+            if (options.length === 0) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+            dropdown.classList.remove('hidden');
+            options.slice(0, 20).forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-1.5 hover:bg-pink-100 rounded-lg cursor-pointer text-gray-800 font-medium';
+                div.innerText = opt;
+                div.addEventListener('click', () => {
+                    input.value = opt;
+                    dropdown.classList.add('hidden');
+                });
+                dropdown.appendChild(div);
+            });
+        }
+
+        // Hide dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            filterFieldsConfig.forEach(config => {
+                const input = document.getElementById(config.inputId);
+                const dropdown = document.getElementById(config.dropdownId);
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
+        });
+
         // Apply Filters Request Handler
         document.getElementById('applyFiltersBtn').addEventListener('click', async () => {
             if (!validateDuration()) return;
@@ -250,7 +320,7 @@
             };
 
             try {
-                const res = await fetch('/api/calls/search', {
+                const res = await fetch(`${BACKEND_URL}/api/calls/search`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -295,7 +365,7 @@
             document.getElementById('transcriptModal').classList.remove('hidden');
 
             try {
-                const res = await fetch(`/api/calls/${callId}/transcript`);
+                const res = await fetch(`${BACKEND_URL}/api/calls/${callId}/transcript`);
                 const result = await res.json();
                 const turns = result.turns || [];
 
