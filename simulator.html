@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDGMS - Call Simulator</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 40%, #a1c4fd 80%, #c2e9fb 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 50px rgba(235, 110, 165, 0.2), 0 10px 25px rgba(100, 150, 240, 0.15);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #3b82f6 100%);
+            background-size: 200% auto;
+            transition: all 0.4s ease;
+        }
+        .gradient-btn:hover {
+            background-position: right center;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4);
+            transform: translateY(-2px);
+        }
+        #bubbleCanvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1; }
+        .container-relative { position: relative; z-index: 10; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 select-none relative">
+
+    <canvas id="bubbleCanvas"></canvas>
+
+    <div class="container-relative max-w-4xl mx-auto space-y-6">
+        <!-- Top Navigation Header -->
+        <div class="glass-card rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">AI Prospect Call Simulator</h1>
+                <p class="text-xs sm:text-sm font-medium text-pink-900/80 mt-1">Train with AI-driven prospects powered by Gemini</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='/dashboard.html'" class="px-4 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-gray-700 font-bold text-xs border border-white transition-all shadow-sm cursor-pointer">
+                    Open Dashboard
+                </button>
+                <button onclick="window.location.href='/call_logger.html'" class="px-4 py-2.5 rounded-2xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs transition-all shadow-md cursor-pointer">
+                    Log a Call
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 1: INITIAL DETAILS FORM -->
+        <div id="setupTab" class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
+            <h2 class="text-xl font-bold text-gray-800 border-b border-pink-200/60 pb-3">1. Prospect Configuration</h2>
+
+            <!-- Prospect Type Selection -->
+            <div class="flex items-center gap-4">
+                <label class="text-xs font-bold text-pink-800 uppercase">Prospect Type:</label>
+                <div class="flex items-center gap-2">
+                    <button id="typeExistingBtn" onclick="setProspectType(true)" class="px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-sm transition-all cursor-pointer">
+                        Existing Prospect
+                    </button>
+                    <button id="typeNewBtn" onclick="setProspectType(false)" class="px-4 py-2 rounded-xl text-xs font-bold bg-white/70 text-gray-700 border border-white transition-all cursor-pointer">
+                        New Prospect
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Fields Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Company Name (Dynamic Search / Manual) -->
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
+                    <label class="text-xs font-bold text-pink-700 uppercase">Company Name</label>
+                    <input type="text" id="companyInput" placeholder="Type to search company..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none" autocomplete="off">
+                    <div id="companyDropdown" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-40 overflow-y-auto hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200 text-xs"></div>
+                </div>
+
+                <!-- Prospect Role -->
+                <div class="glass-panel p-4 rounded-2xl space-y-2 relative">
+                    <label class="text-xs font-bold text-pink-700 uppercase">Prospect Role</label>
+                    <input type="text" id="roleInput" placeholder="Select or type role..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none" autocomplete="off">
+                    <div id="roleDropdown" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-40 overflow-y-auto hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200 text-xs"></div>
+                </div>
+
+                <!-- Company Kind -->
+                <div class="glass-panel p-4 rounded-2xl space-y-2 col-span-1 sm:col-span-2">
+                    <label class="text-xs font-bold text-pink-700 uppercase">Company Kind</label>
+                    <input type="text" id="companyKindInput" placeholder="Auto-filled or enter manually..." class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none">
+                </div>
+
+                <!-- Mood Setting Slider (1 - 5) -->
+                <div class="glass-panel p-4 rounded-2xl space-y-2 col-span-1 sm:col-span-2">
+                    <div class="flex justify-between items-center">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Prospect Initial Mood</label>
+                        <span id="moodDisplay" class="text-xs font-extrabold text-pink-600">3 — Neutral Stance</span>
+                    </div>
+                    <input type="range" id="moodSlider" min="1" max="5" value="3" step="1" class="w-full accent-pink-600 cursor-pointer">
+                    <div class="flex justify-between text-[10px] text-gray-500 font-bold">
+                        <span>1: Highly Hesitant</span>
+                        <span>3: Neutral</span>
+                        <span>5: Receptive</span>
+                    </div>
+                </div>
+
+                <!-- Caller Notes -->
+                <div class="glass-panel p-4 rounded-2xl space-y-2 col-span-1 sm:col-span-2">
+                    <label id="notesLabel" class="text-xs font-bold text-pink-700 uppercase">Caller Notes & Objective</label>
+                    <textarea id="callerNotes" rows="3" placeholder="Enter target stage, objective, or previous behaviour context..." class="w-full p-3 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none"></textarea>
+                </div>
+            </div>
+
+            <!-- Validation Banner -->
+            <div id="validationBanner" class="hidden p-3 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 text-xs font-bold"></div>
+
+            <!-- Proceed Button -->
+            <div class="flex justify-end">
+                <button id="proceedBtn" onclick="startSimulator()" class="gradient-btn px-8 py-3 text-white font-extrabold text-xs rounded-2xl shadow-md cursor-pointer flex items-center gap-2">
+                    Proceed to the Simulator ✨
+                </button>
+            </div>
+        </div>
+
+        <!-- TAB 2: LIVE SIMULATOR CHAT INTERFACE -->
+        <div id="chatTab" class="glass-card rounded-3xl p-6 sm:p-8 space-y-4 hidden">
+            <!-- Loading Indicator -->
+            <div id="loadingPhase" class="text-center py-12 space-y-3">
+                <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-600 mx-auto"></div>
+                <p class="text-xs font-bold text-pink-700">Connecting to AI Prospect & Constructing Full Prompt History...</p>
+            </div>
+
+            <!-- Active Conversation UI -->
+            <div id="activeChatPhase" class="hidden space-y-4">
+                <div class="flex justify-between items-center border-b border-pink-200/60 pb-3">
+                    <div>
+                        <h3 id="chatHeaderTitle" class="text-base font-black text-gray-800">Simulating Call</h3>
+                        <p id="chatHeaderSub" class="text-xs text-pink-700 font-bold">Company • Role</p>
+                    </div>
+                    <button onclick="endCallManual()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer">
+                        📞 END CALL
+                    </button>
+                </div>
+
+                <!-- Chat Messages Scroll Area -->
+                <div id="chatMessages" class="h-96 overflow-y-auto space-y-3 p-4 rounded-2xl bg-white/40 border border-white/60"></div>
+
+                <!-- Chat Input Box -->
+                <div class="flex gap-2">
+                    <input type="text" id="userInput" placeholder="Say something to the prospect (or type 'END' to finish)..." onkeypress="handleKeyPress(event)" class="flex-1 px-4 py-3 rounded-2xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    <button onclick="sendMessage()" class="gradient-btn px-6 py-3 text-white font-bold text-xs rounded-2xl shadow-md cursor-pointer">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EVALUATION REPORT POPUP MODAL -->
+    <div id="reportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm hidden">
+        <div class="glass-card w-full max-w-2xl max-h-[85vh] rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col bg-white/95 border border-pink-300 relative animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-pink-200">
+                <div class="flex items-center gap-2 text-pink-700 font-extrabold text-sm uppercase tracking-wider">
+                    <span>📊 Call Evaluation & Performance Report</span>
+                </div>
+                <button onclick="closeReportModal()" class="w-8 h-8 rounded-full bg-pink-100 hover:bg-pink-200 text-pink-700 font-bold flex items-center justify-center text-xs transition-all cursor-pointer">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Modal Scrollable Content -->
+            <div id="reportModalContent" class="overflow-y-auto my-4 pr-2 space-y-3 text-xs text-gray-800 leading-relaxed">
+                <!-- Injected report content goes here -->
+            </div>
+
+            <!-- Modal Footer Actions -->
+            <div class="pt-4 border-t border-pink-200 flex justify-end gap-3">
+                <button onclick="window.location.reload()" class="px-5 py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer">
+                    Start New Simulation 🔄
+                </button>
+                <button onclick="closeReportModal()" class="px-5 py-2.5 rounded-xl bg-white/80 hover:bg-white text-gray-700 font-bold text-xs border border-pink-200 transition-all cursor-pointer">
+                    Close & Review Transcript
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Logic -->
+    <script>
+        const BACKEND_URL = 'https://caller-screens.onrender.com';
+        let isExistingProspect = true;
+        let cachedCompanies = [];
+        let systemPromptText = '';
+        let chatHistory = [];
+
+        // Mood Label Update
+        const moodMap = {
+            1: "1 — Highly Hesitant",
+            2: "2 — Cautious & Reluctant",
+            3: "3 — Neutral Stance",
+            4: "4 — Receptive & Curious",
+            5: "5 — Highly Receptive"
+        };
+
+        document.getElementById('moodSlider').addEventListener('input', (e) => {
+            document.getElementById('moodDisplay').innerText = moodMap[e.target.value];
+        });
+
+        function setProspectType(isExisting) {
+            isExistingProspect = isExisting;
+            const existingBtn = document.getElementById('typeExistingBtn');
+            const newBtn = document.getElementById('typeNewBtn');
+            const notesLabel = document.getElementById('notesLabel');
+
+            if (isExisting) {
+                existingBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-sm transition-all cursor-pointer";
+                newBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-white/70 text-gray-700 border border-white transition-all cursor-pointer";
+                notesLabel.innerText = "Caller Notes & Objective (Optional)";
+            } else {
+                newBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-pink-600 text-white shadow-sm transition-all cursor-pointer";
+                existingBtn.className = "px-4 py-2 rounded-xl text-xs font-bold bg-white/70 text-gray-700 border border-white transition-all cursor-pointer";
+                notesLabel.innerText = "Caller Notes & Objective (MANDATORY for New Prospects)";
+            }
+        }
+
+        // Fetch Companies on Load
+        async function loadCompanies() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulator/companies`);
+                const data = await res.json();
+                if (data.success) cachedCompanies = data.companies;
+            } catch (e) {
+                console.error("Failed to load companies:", e);
+            }
+        }
+        window.addEventListener('DOMContentLoaded', loadCompanies);
+
+        // Dynamic Company Dropdown
+        const companyInput = document.getElementById('companyInput');
+        const companyDropdown = document.getElementById('companyDropdown');
+
+        companyInput.addEventListener('focus', () => showCompanyDropdown(cachedCompanies));
+        companyInput.addEventListener('input', () => {
+            if (!isExistingProspect) return;
+            const q = companyInput.value.toLowerCase();
+            showCompanyDropdown(cachedCompanies.filter(c => c.toLowerCase().includes(q)));
+        });
+
+        function showCompanyDropdown(items) {
+            if (!isExistingProspect || items.length === 0) {
+                companyDropdown.classList.add('hidden');
+                return;
+            }
+            companyDropdown.innerHTML = items.slice(0, 15).map(c => `
+                <div onclick="selectCompany('${c}')" class="p-2 hover:bg-pink-100 rounded-lg cursor-pointer font-medium text-gray-800">${c}</div>
+            `).join('');
+            companyDropdown.classList.remove('hidden');
+        }
+
+        async function selectCompany(companyName) {
+            companyInput.value = companyName;
+            companyDropdown.classList.add('hidden');
+
+            // Load Roles for selected company
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulator/roles?company_name=${encodeURIComponent(companyName)}`);
+                const data = await res.json();
+                if (data.success && data.roles.length > 0) {
+                    showRoleDropdown(data.roles);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Role Dropdown
+        const roleInput = document.getElementById('roleInput');
+        const roleDropdown = document.getElementById('roleDropdown');
+
+        function showRoleDropdown(roles) {
+            roleDropdown.innerHTML = roles.map(r => `
+                <div onclick="selectRole('${r}')" class="p-2 hover:bg-pink-100 rounded-lg cursor-pointer font-medium text-gray-800">${r}</div>
+            `).join('');
+            roleDropdown.classList.remove('hidden');
+        }
+
+        async function selectRole(role) {
+            roleInput.value = role;
+            roleDropdown.classList.add('hidden');
+
+            // Auto-fetch company_kind
+            try {
+                const companyName = companyInput.value;
+                const res = await fetch(`${BACKEND_URL}/api/simulator/company-kind?company_name=${encodeURIComponent(companyName)}&prospect_role=${encodeURIComponent(role)}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('companyKindInput').value = data.company_kind || '';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Hide Dropdowns when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!companyInput.contains(e.target)) companyDropdown.classList.add('hidden');
+            if (!roleInput.contains(e.target)) roleDropdown.classList.add('hidden');
+        });
+
+        // Start Simulator Action
+        async function startSimulator() {
+            const company_name = companyInput.value.trim();
+            const prospect_role = roleInput.value.trim();
+            const company_kind = document.getElementById('companyKindInput').value.trim();
+            const moodValue = document.getElementById('moodSlider').value;
+            const callerNotes = document.getElementById('callerNotes').value.trim();
+            const banner = document.getElementById('validationBanner');
+
+            // Validation
+            banner.classList.add('hidden');
+            if (!company_name || !prospect_role || !company_kind) {
+                banner.innerText = "Please complete Company Name, Prospect Role, and Company Kind.";
+                banner.classList.remove('hidden');
+                return;
+            }
+
+            if (!isExistingProspect && !callerNotes) {
+                banner.innerText = "Caller Notes & Objective is MANDATORY when creating a simulation for a New Prospect.";
+                banner.classList.remove('hidden');
+                return;
+            }
+
+            // Switch Tabs & Show Loading
+            document.getElementById('setupTab').classList.add('hidden');
+            document.getElementById('chatTab').classList.remove('hidden');
+            document.getElementById('loadingPhase').classList.remove('hidden');
+            document.getElementById('activeChatPhase').classList.add('hidden');
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulator/context`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        isExisting: isExistingProspect,
+                        company_name,
+                        prospect_role,
+                        company_kind,
+                        moodValue,
+                        callerNotes
+                    })
+                });
+
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                systemPromptText = data.systemPrompt;
+                chatHistory = [];
+
+                // Render Header info
+                document.getElementById('chatHeaderTitle').innerText = `${company_name} (${company_kind})`;
+                document.getElementById('chatHeaderSub').innerText = `Role: ${prospect_role} • Initial Mood: ${moodMap[moodValue]}`;
+
+                // Reveal Active Chat
+                document.getElementById('loadingPhase').classList.add('hidden');
+                document.getElementById('activeChatPhase').classList.remove('hidden');
+
+                appendMessage('system', 'Simulation ready. Introduce yourself to start the call!');
+            } catch (err) {
+                alert("Failed to build simulator context: " + err.message);
+                document.getElementById('setupTab').classList.remove('hidden');
+                document.getElementById('chatTab').classList.add('hidden');
+            }
+        }
+
+        async function sendMessage() {
+            const inputEl = document.getElementById('userInput');
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            inputEl.value = '';
+            appendMessage('user', text);
+
+            if (text.toUpperCase() === 'END') {
+                endCallManual();
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulator/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemPrompt: systemPromptText,
+                        chatHistory: chatHistory,
+                        userMessage: text
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    appendMessage('prospect', data.reply);
+                    chatHistory.push({ sender: 'user', text: text });
+                    chatHistory.push({ sender: 'prospect', text: data.reply });
+                } else {
+                    appendMessage('system', 'Error getting reply from prospect.');
+                }
+            } catch (e) {
+                appendMessage('system', 'Network error.');
+            }
+        }
+
+        function endCallManual() {
+            appendMessage('system', 'Call Ended. Requesting evaluation report from AI...');
+            fetchReport();
+        }
+
+        async function fetchReport() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/simulator/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        systemPrompt: systemPromptText,
+                        chatHistory: chatHistory,
+                        userMessage: "END"
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showReportModal(data.reply);
+                }
+            } catch (e) {
+                appendMessage('system', 'Failed to generate final report.');
+            }
+        }
+
+        function showReportModal(reportText) {
+            const contentContainer = document.getElementById('reportModalContent');
+            
+            // Clean up markdown hashes, dividers, and format bolding cleanly
+            let cleanedText = reportText
+                .replace(/###\s*/g, '')
+                .replace(/---/g, '')
+                .replace(/\*\*\*(.*?)\*\*\*/g, '<strong>$1</strong>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-pink-900 font-bold">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            const lines = cleanedText.split('\n').filter(line => line.trim() !== '');
+            let bodyContent = '<div class="space-y-3">';
+            
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.endsWith(':') && !trimmed.startsWith('1.') && !trimmed.startsWith('2.') && !trimmed.startsWith('3.')) {
+                    bodyContent += `<h4 class="font-extrabold text-pink-700 text-xs uppercase tracking-wide mt-4 mb-1">${trimmed}</h4>`;
+                } else if (/^\d+\./.test(trimmed)) {
+                    bodyContent += `<div class="flex items-start gap-2 pl-2 py-1"><span class="text-pink-600 font-bold shrink-0">•</span><span>${trimmed.replace(/^\d+\.\s*/, '')}</span></div>`;
+                } else if (trimmed.startsWith('-') || trimmed.startsWith('*')) {
+                    bodyContent += `<div class="flex items-start gap-2 pl-2 py-1"><span class="text-pink-600 font-bold shrink-0">•</span><span>${trimmed.replace(/^[-\*]\s*/, '')}</span></div>`;
+                } else {
+                    bodyContent += `<p class="text-gray-700 leading-relaxed">${trimmed}</p>`;
+                }
+            });
+            bodyContent += '</div>';
+
+            contentContainer.innerHTML = bodyContent;
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.add('hidden');
+        }
+
+        function appendMessage(sender, text) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+
+            if (sender === 'user') {
+                div.className = "p-3 rounded-2xl bg-pink-600 text-white text-xs ml-auto max-w-[80%] shadow-sm";
+                div.innerText = text;
+            } else if (sender === 'prospect') {
+                div.className = "p-3 rounded-2xl bg-white border border-pink-100 text-gray-800 text-xs mr-auto max-w-[80%] shadow-sm font-medium";
+                div.innerText = text;
+            } else {
+                div.className = "p-2 rounded-xl bg-gray-200/70 text-gray-700 text-[11px] text-center italic font-bold my-2";
+                div.innerText = text;
+            }
+
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+    </script>
+</body>
+</html>
