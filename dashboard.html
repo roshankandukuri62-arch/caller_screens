@@ -52,7 +52,6 @@
 
     <canvas id="bubbleCanvas"></canvas>
 
-    <!-- Increased vertical spacing to space-y-12 -->
     <div class="dashboard-container max-w-7xl mx-auto space-y-12">
         <!-- Header -->
         <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-20">
@@ -65,10 +64,21 @@
             </div>
             
             <div class="flex items-center gap-3">
+                <!-- Call Simulator Link Button (To the left of Log a Call) -->
+                <button onclick="window.location.href='/simulator.html'" class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer">
+                    ✨ Get into the Call Simulator
+                </button>
+
                 <!-- Log a Call Button Linked to call_logger.html -->
                 <button onclick="window.location.href='/call_logger.html'" class="px-5 py-2.5 rounded-2xl bg-pink-600 hover:bg-pink-700 text-white font-bold text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Log a Call
+                </button>
+
+                <!-- View Logs Button -->
+                <button onclick="window.location.href='/logs_view.html'" class="px-5 py-2.5 rounded-2xl bg-white/80 hover:bg-white text-pink-700 font-bold text-sm border border-white transition-all shadow-sm flex items-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    View Logs
                 </button>
 
                 <!-- Sign Out Button -->
@@ -208,9 +218,7 @@
                 <h3 id="modalTitle" class="text-xl font-bold text-gray-800">Call Transcript Review</h3>
                 <button onclick="closeTranscriptModal()" class="px-3 py-1.5 rounded-xl bg-white/70 hover:bg-white text-rose-600 font-bold text-xs cursor-pointer">Close</button>
             </div>
-            <div id="modalTranscriptContent" class="space-y-3 text-xs">
-                <!-- Turn logs rendered here -->
-            </div>
+            <div id="modalTranscriptContent" class="space-y-3 text-xs"></div>
         </div>
     </div>
 
@@ -218,7 +226,6 @@
     <script>
         const BACKEND_URL = 'https://caller-screens.onrender.com';
 
-        // Fetch Live Total Calls on Page Load
         async function fetchLiveTotalCalls() {
             try {
                 const res = await fetch(`${BACKEND_URL}/api/calls/stats`);
@@ -231,7 +238,6 @@
         }
         window.addEventListener('DOMContentLoaded', fetchLiveTotalCalls);
 
-        // Duration Validation Logic
         function validateDuration() {
             const gt = parseFloat(document.getElementById('durationGt').value);
             const lt = parseFloat(document.getElementById('durationLt').value);
@@ -247,7 +253,6 @@
         document.getElementById('durationGt').addEventListener('input', validateDuration);
         document.getElementById('durationLt').addEventListener('input', validateDuration);
 
-        // Interactive Dropdowns and Auto-complete for Filter Boxes
         const filterFieldsConfig = [
             { inputId: 'filterCallId', dropdownId: 'dropdownCallId', fieldName: 'call_id' },
             { inputId: 'filterOutcome', dropdownId: 'dropdownOutcome', fieldName: 'call_outcome' },
@@ -260,7 +265,6 @@
         filterFieldsConfig.forEach(config => {
             const input = document.getElementById(config.inputId);
             const dropdown = document.getElementById(config.dropdownId);
-
             let cachedOptions = [];
 
             input.addEventListener('focus', async () => {
@@ -302,7 +306,6 @@
             });
         }
 
-        // Hide dropdowns when clicking outside
         document.addEventListener('click', (e) => {
             filterFieldsConfig.forEach(config => {
                 const input = document.getElementById(config.inputId);
@@ -313,7 +316,6 @@
             });
         });
 
-        // Apply Filters Request Handler
         document.getElementById('applyFiltersBtn').addEventListener('click', async () => {
             if (!validateDuration()) return;
 
@@ -367,7 +369,6 @@
             `).join('');
         }
 
-        // Transcript Modal Logic
         async function openTranscript(callId) {
             document.getElementById('modalTitle').innerText = `Full Transcript — Call ID: ${callId}`;
             const container = document.getElementById('modalTranscriptContent');
@@ -410,7 +411,6 @@
         });
     </script>
 
-    <!-- Canvas Bubble Animation Script -->
     <script>
         const canvas = document.getElementById('bubbleCanvas');
         const ctx = canvas.getContext('2d');
