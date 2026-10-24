@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDGMS - My Call Logs</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 40%, #a1c4fd 80%, #c2e9fb 100%);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            overflow-x: hidden;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.55);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 50px rgba(235, 110, 165, 0.2), 0 10px 25px rgba(100, 150, 240, 0.15);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+        }
+        .gradient-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #3b82f6 100%);
+            background-size: 200% auto;
+            transition: all 0.4s ease;
+        }
+        .gradient-btn:hover {
+            background-position: right center;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4);
+            transform: translateY(-2px);
+        }
+        #bubbleCanvas {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1;
+        }
+        .container-relative { position: relative; z-index: 10; }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-8 select-none relative">
+
+    <canvas id="bubbleCanvas"></canvas>
+
+    <div class="container-relative max-w-5xl mx-auto space-y-6">
+        <!-- Top Navigation Bar -->
+        <div class="glass-card rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">Call History & Logs</h1>
+                <p class="text-xs sm:text-sm font-medium text-pink-900/80 mt-1">Logged-in Employee ID: <span id="currentEmployeeDisplay" class="font-bold text-pink-700">Loading...</span></p>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Open Dashboard Button -->
+                <button onclick="window.location.href='/dashboard.html'" class="px-5 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-gray-700 font-bold text-xs border border-white transition-all shadow-sm cursor-pointer flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                    Open Dashboard
+                </button>
+
+                <!-- Sign-out Button -->
+                <button onclick="localStorage.removeItem('employee_id'); window.location.href='/'" class="px-5 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-rose-600 font-bold text-xs border border-white transition-all shadow-sm cursor-pointer flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Sign-out
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="glass-card rounded-3xl p-6 sm:p-8 space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-pink-200/60 pb-4">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-800">Stored Call Logs</h2>
+                    <p class="text-xs text-gray-600 mt-1">Click on any call entry to inspect stage progression, prospect statements, and manual notes.</p>
+                </div>
+                <button onclick="loadEmployeeLogs()" class="px-4 py-2 rounded-xl bg-white/80 hover:bg-white text-pink-700 font-bold text-xs border border-white shadow-sm transition-all cursor-pointer flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    Refresh Logs
+                </button>
+            </div>
+
+            <!-- Loading & Empty States -->
+            <div id="loadingState" class="text-center py-12 text-gray-600 text-xs font-semibold">Loading your call history...</div>
+            <div id="emptyState" class="hidden text-center py-12 text-gray-500 text-xs font-medium">No call logs found for this employee ID yet. Go log a call to see it here!</div>
+
+            <!-- Logs List Container -->
+            <div id="logsContainer" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <!-- Call Details Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-pink-200/60 pb-3">
+                <div>
+                    <h3 id="modalCompanyName" class="text-lg font-black text-gray-800">Company Name</h3>
+                    <p class="text-xs text-pink-700 font-bold"><span id="modalProspectName">Name</span> • <span id="modalProspectRole" class="font-normal italic">Role</span></p>
+                </div>
+                <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/70 hover:bg-white text-gray-700 font-bold text-xs flex items-center justify-center cursor-pointer shadow-sm">✕</button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+                <div class="glass-panel p-3 rounded-2xl">
+                    <span class="text-gray-500 block font-bold uppercase text-[10px]">Prospect Type</span>
+                    <span id="modalType" class="font-bold text-gray-800">New</span>
+                </div>
+                <div class="glass-panel p-3 rounded-2xl">
+                    <span class="text-gray-500 block font-bold uppercase text-[10px]">Final Stage Reached</span>
+                    <span id="modalStage" class="font-bold text-pink-600">Stage 5</span>
+                </div>
+                <div class="glass-panel p-3 rounded-2xl col-span-2 sm:col-span-1">
+                    <span class="text-gray-500 block font-bold uppercase text-[10px]">Final Mood</span>
+                    <span id="modalMood" class="font-bold text-emerald-600">Receptive</span>
+                </div>
+            </div>
+
+            <!-- Stage Notes Section -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-extrabold text-pink-800 uppercase tracking-wider">Manual Caller Notes</h4>
+                <div id="modalNotesContainer" class="space-y-2"></div>
+            </div>
+
+            <!-- Selected Responses Section -->
+            <div class="space-y-2">
+                <h4 class="text-xs font-extrabold text-pink-800 uppercase tracking-wider">Selected Prospect Responses per Stage</h4>
+                <div id="modalResponsesContainer" class="space-y-2"></div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="closeModal()" class="gradient-btn px-6 py-2.5 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Execution -->
+    <script>
+        const BACKEND_URL = 'https://caller-screens.onrender.com';
+        const employeeId = localStorage.getItem('employee_id');
+
+        document.getElementById('currentEmployeeDisplay').innerText = employeeId || 'EMP_DEMO (Not Logged In)';
+
+        async function loadEmployeeLogs() {
+            const loadingEl = document.getElementById('loadingState');
+            const emptyEl = document.getElementById('emptyState');
+            const container = document.getElementById('logsContainer');
+
+            loadingEl.classList.remove('hidden');
+            emptyEl.classList.add('hidden');
+            container.innerHTML = '';
+
+            const currentEmp = employeeId || 'EMP_DEMO';
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/calls/logs?employee_id=${encodeURIComponent(currentEmp)}`);
+                const result = await response.json();
+
+                loadingEl.classList.add('hidden');
+
+                if (!response.ok || !result.logs || result.logs.length === 0) {
+                    emptyEl.classList.remove('hidden');
+                    return;
+                }
+
+                renderLogsList(result.logs);
+            } catch (error) {
+                console.error('Error fetching logs:', error);
+                loadingEl.innerHTML = '<span class="text-rose-600 font-bold">Failed to load call logs. Please check your network or backend server.</span>';
+            }
+        }
+
+        function renderLogsList(logs) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = logs.map(log => {
+                const dateStr = log.created_at ? new Date(log.created_at).toLocaleString() : 'Recent';
+                const isNew = log.is_new_prospect === 'yes' ? 'New Prospect' : 'Existing Contact';
+                const badgeColor = log.is_new_prospect === 'yes' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+
+                return `
+                    <div onclick='openDetailModal(${JSON.stringify(log)})' class="glass-panel p-4 sm:p-5 rounded-2xl hover:bg-white/80 transition-all cursor-pointer flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-sm">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-base font-black text-gray-800">${log.company_name || 'Unknown Company'}</span>
+                                <span class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${badgeColor}">${isNew}</span>
+                            </div>
+                            <p class="text-xs font-bold text-gray-600">Prospect: <span class="text-pink-700">${log.prospect_name || 'N/A'}</span> (${log.prospect_role || 'Role N/A'})</p>
+                            <p class="text-[10px] text-gray-400">Logged on: ${dateStr}</p>
+                        </div>
+                        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                            <div class="text-right">
+                                <span class="block text-[10px] font-extrabold uppercase text-gray-400">Final Reached</span>
+                                <span class="text-xs font-bold text-pink-600">Stage ${log.final_stage_reached || 0}</span>
+                            </div>
+                            <div class="px-3 py-1 rounded-full text-xs font-bold text-white bg-orange-500 shadow-sm">
+                                ${log.final_mood || 'Hesitant'}
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openDetailModal(log) {
+            document.getElementById('modalCompanyName').innerText = log.company_name || 'Unknown Company';
+            document.getElementById('modalProspectName').innerText = log.prospect_name || 'N/A';
+            document.getElementById('modalProspectRole').innerText = log.prospect_role || 'N/A';
+            document.getElementById('modalType').innerText = log.is_new_prospect === 'yes' ? 'New Prospect' : 'Existing Contact';
+            document.getElementById('modalStage').innerText = `Stage ${log.final_stage_reached || 0}`;
+            document.getElementById('modalMood').innerText = log.final_mood || 'N/A';
+
+            // Render Notes
+            const notesContainer = document.getElementById('modalNotesContainer');
+            const notes = log.stage_notes || {};
+            const hasNotes = Object.values(notes).some(n => n && n.trim() !== '');
+            
+            if (hasNotes) {
+                notesContainer.innerHTML = Object.entries(notes).map(([stageKey, note]) => {
+                    if (!note || note.trim() === '') return '';
+                    return `<div class="p-2.5 rounded-xl bg-white/70 border border-white text-xs"><strong class="text-pink-700 uppercase text-[10px]">${stageKey}:</strong> <span class="text-gray-800">${note}</span></div>`;
+                }).join('');
+            } else {
+                notesContainer.innerHTML = '<p class="text-xs text-gray-400 italic">No manual notes recorded for this call.</p>';
+            }
+
+            // Render Selected Responses
+            const responsesContainer = document.getElementById('modalResponsesContainer');
+            const responses = log.selected_responses || {};
+            const hasResponses = Object.keys(responses).length > 0;
+
+            if (hasResponses) {
+                responsesContainer.innerHTML = Object.entries(responses).map(([stageKey, data]) => {
+                    return `
+                        <div class="p-3 rounded-xl bg-white/70 border border-white space-y-1 text-xs">
+                            <div class="flex justify-between items-center">
+                                <strong class="text-pink-700 uppercase text-[10px]">${stageKey}</strong>
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-bold text-white bg-pink-500">Mood: ${data.mood || 'N/A'}</span>
+                            </div>
+                            <p class="text-gray-800 font-medium">"${data.prospect_statement || 'N/A'}"</p>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                responsesContainer.innerHTML = '<p class="text-xs text-gray-400 italic">No responses recorded.</p>';
+            }
+
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadEmployeeLogs();
+        });
+    </script>
+</body>
+</html>
