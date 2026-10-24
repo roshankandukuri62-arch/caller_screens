@@ -157,4 +157,58 @@ router.get('/:id/transcript', async (req, res) => {
     }
 });
 
+// 5. Save Live Call Log Endpoint
+router.post('/save-log', async (req, res) => {
+    console.log('API Request: POST /api/calls/save-log with payload:', req.body);
+    const supabase = req.app.locals.supabase;
+
+    try {
+        const {
+            employee_id,
+            company_name,
+            prospect_name,
+            prospect_role,
+            is_new_prospect,
+            final_stage_reached,
+            final_mood,
+            stage_notes,
+            selected_responses
+        } = req.body;
+
+        // Basic validation
+        if (!company_name || !prospect_name || !employee_id) {
+            return res.status(400).json({ success: false, error: "Missing required fields." });
+        }
+
+        // Insert into Supabase (call_logger_id generates automatically)
+        const { data, error } = await supabase
+            .from('call_logs')
+            .insert([{
+                employee_id,
+                company_name,
+                prospect_name,
+                prospect_role,
+                is_new_prospect,
+                final_stage_reached,
+                final_mood,
+                stage_notes: stage_notes || {},
+                selected_responses: selected_responses || {}
+            }])
+            .select();
+
+        if (error) throw error;
+
+        console.log(`Call log saved successfully. Assigned ID: ${data[0].call_logger_id}`);
+        return res.status(200).json({ 
+            success: true, 
+            message: "Call log saved successfully", 
+            call_logger_id: data[0].call_logger_id 
+        });
+
+    } catch (err) {
+        console.error("Error inserting call log:", err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 module.exports = router;
