@@ -4,7 +4,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini Client with active model
 const genAI = new GoogleGenerativeAI(process.env.LLM_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-3.8-flash" });
 
 // 1. Existing Companies Dropdown Options
 router.get('/companies', async (req, res) => {
