@@ -157,7 +157,34 @@ router.get('/:id/transcript', async (req, res) => {
     }
 });
 
-// 5. Save Live Call Log Endpoint
+// 5. Get Saved Call Logs for a Particular Employee ID
+router.get('/logs', async (req, res) => {
+    const { employee_id } = req.query;
+    console.log(`API Request: GET /api/calls/logs for employee_id: ${employee_id}`);
+    const supabase = req.app.locals.supabase;
+
+    try {
+        if (!employee_id) {
+            return res.status(400).json({ success: false, error: 'employee_id query parameter is required.' });
+        }
+
+        const { data, error } = await supabase
+            .from('call_logs')
+            .select('*')
+            .eq('employee_id', employee_id)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        console.log(`Successfully fetched ${data.length} logs for employee ${employee_id}`);
+        return res.status(200).json({ success: true, logs: data });
+    } catch (err) {
+        console.error('Error fetching employee call logs:', err.message);
+        return res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 6. Save Live Call Log Endpoint
 router.post('/save-log', async (req, res) => {
     console.log('API Request: POST /api/calls/save-log with payload:', req.body);
     const supabase = req.app.locals.supabase;
