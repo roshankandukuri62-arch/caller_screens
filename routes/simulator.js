@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize Gemini Client
+// Initialize Gemini Client with active model
 const genAI = new GoogleGenerativeAI(process.env.LLM_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // 1. Existing Companies Dropdown Options
 router.get('/companies', async (req, res) => {
@@ -154,7 +154,7 @@ You can choose to end the conversation whenever depending on your assigned mood 
     }
 });
 
-// 5. Chat Interaction Endpoint (Using single-turn full context construction for maximum stability)
+// 5. Chat Interaction Endpoint
 router.post('/chat', async (req, res) => {
     const { systemPrompt, chatHistory, userMessage } = req.body;
 
@@ -163,7 +163,6 @@ router.post('/chat', async (req, res) => {
             throw new Error("LLM_KEY environment variable is missing on the server.");
         }
 
-        // Build a clean chronological transcript of the conversation so far
         let fullConversation = `${systemPrompt}\n\n--- LIVE CONVERSATION START ---\n`;
         
         (chatHistory || []).forEach(turn => {
