@@ -3,194 +3,786 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDGMS - Call Logger</title>
+    <title> PDGMS - Live Call Logger </title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        * {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
+        * { font-family: 'Plus Jakarta Sans', sans-serif; }
         body {
             background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 40%, #a1c4fd 80%, #c2e9fb 100%);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             overflow-x: hidden;
         }
-
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
         .glass-card {
-            background: rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.55);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            box-shadow: 0 20px 50px rgba(235, 110, 165, 0.2),
-                        0 10px 25px rgba(100, 150, 240, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 20px 50px rgba(235, 110, 165, 0.2), 0 10px 25px rgba(100, 150, 240, 0.15);
         }
-
-        .glass-input {
-            background: rgba(255, 255, 255, 0.6);
-            border: 1.5px solid rgba(255, 255, 255, 0.8);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.85);
+            transition: all 0.3s ease;
         }
-
-        .glass-input:focus {
-            background: rgba(255, 255, 255, 0.9);
-            border-color: #f43f5e;
-            box-shadow: 0 0 0 4px rgba(244, 63, 94, 0.15),
-                        0 0 15px rgba(96, 165, 250, 0.2);
-            outline: none;
-        }
-
         .gradient-btn {
             background: linear-gradient(135deg, #ec4899 0%, #f43f5e 50%, #3b82f6 100%);
             background-size: 200% auto;
             transition: all 0.4s ease;
         }
-
-        .gradient-btn:hover {
+        .gradient-btn:hover:not(:disabled) {
             background-position: right center;
             box-shadow: 0 10px 25px rgba(236, 72, 153, 0.4);
             transform: translateY(-2px);
         }
-
-        .gradient-btn:active {
-            transform: translateY(0);
+        .gradient-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
-
         #bubbleCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 1;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 1;
         }
-
-        .logger-container {
-            position: relative;
-            z-index: 10;
-        }
+        .container-relative { position: relative; z-index: 10; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4 sm:p-6 select-none relative">
+<body class="min-h-screen p-4 sm:p-8 select-none relative">
 
-    <!-- Interactive Bubble Canvas -->
     <canvas id="bubbleCanvas"></canvas>
 
-    <!-- Call Logger Container -->
-    <div class="logger-container w-full max-w-2xl my-8">
-        <div class="glass-card rounded-3xl p-6 sm:p-10 relative overflow-hidden">
-            
-            <!-- Background Glow Accents -->
-            <div class="absolute -top-16 -right-16 w-40 h-40 bg-pink-400 rounded-full blur-3xl opacity-50"></div>
-            <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-blue-400 rounded-full blur-3xl opacity-50"></div>
-
-            <!-- Top Header & Navigation -->
-            <div class="flex items-center justify-between pb-6 mb-6 border-b border-pink-200/50">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">
-                        PDGMS - Call Logger
-                    </h1>
-                    <p class="text-sm font-medium text-pink-700/80 mt-1">
-                        Record and manage employee call transcripts
-                    </p>
-                </div>
-
-                <button 
-                    onclick="window.location.href='/dashboard.html'" 
-                    class="px-4 py-2 rounded-2xl bg-white/60 hover:bg-white/90 text-gray-700 font-bold text-xs sm:text-sm border border-white/80 transition-all shadow-sm hover:shadow-md cursor-pointer flex items-center gap-1.5"
-                >
+    <div class="container-relative max-w-6xl mx-auto space-y-6">
+        <!-- Top Navigation Bar -->
+        <div class="glass-card rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight">PDGMS - Live Call Logger</h1>
+                <p class="text-xs sm:text-sm font-medium text-pink-900/80 mt-1">Meridian Growth Partners — Interactive Playbook</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="window.location.href='/dashboard.html'" class="px-5 py-2.5 rounded-2xl bg-white/70 hover:bg-white text-gray-700 font-bold text-xs border border-white transition-all shadow-sm cursor-pointer flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    Back
+                    Back to Dashboard
                 </button>
             </div>
+        </div>
 
-            <!-- Call Logger Form -->
-            <form id="callLogForm" onsubmit="event.preventDefault(); alert('Call logged successfully!');" class="space-y-5">
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <!-- Caller ID / Phone -->
-                    <div>
-                        <label class="block text-xs font-bold text-pink-900 mb-1.5 uppercase tracking-wide">
-                            Caller ID / Account #
-                        </label>
-                        <input 
-                            type="text" 
-                            placeholder="e.g. C-10294" 
-                            required
-                            class="glass-input w-full px-4 py-3 rounded-2xl text-gray-800 text-sm font-medium"
-                        >
-                    </div>
-
-                    <!-- Call Duration -->
-                    <div>
-                        <label class="block text-xs font-bold text-pink-900 mb-1.5 uppercase tracking-wide">
-                            Call Duration (mm:ss)
-                        </label>
-                        <input 
-                            type="text" 
-                            placeholder="e.g. 04:35" 
-                            required
-                            class="glass-input w-full px-4 py-3 rounded-2xl text-gray-800 text-sm font-medium"
-                        >
-                    </div>
+        <!-- Dynamic On Call Banner -->
+        <div id="onCallBanner" class="hidden glass-card rounded-2xl p-4 border-l-8 border-pink-500 flex items-center justify-between">
+            <div>
+                <div class="text-[10px] font-extrabold text-pink-700 uppercase tracking-widest flex items-center gap-2">
+                    <span>On a call with</span>
+                    <span id="bannerProspectTypeBadge" class="px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[9px] font-black uppercase">Existing Contact</span>
                 </div>
-
-                <!-- Call Category -->
-                <div>
-                    <label class="block text-xs font-bold text-pink-900 mb-1.5 uppercase tracking-wide">
-                        Inquiry Category
-                    </label>
-                    <select class="glass-input w-full px-4 py-3 rounded-2xl text-gray-800 text-sm font-medium cursor-pointer">
-                        <option value="general">General Support</option>
-                        <option value="billing">Billing & Account</option>
-                        <option value="technical">Technical Issue</option>
-                        <option value="escalation">Escalated Caller</option>
-                    </select>
+                <div class="flex items-baseline gap-3 mt-0.5">
+                    <span id="bannerCompanyName" class="text-xl font-black text-gray-800">Company Name</span>
+                    <span class="text-sm font-bold text-gray-700">| <span id="bannerProspectName">Prospect Name</span></span>
+                    <span id="bannerProspectRole" class="text-xs font-semibold text-gray-500 italic">(Role)</span>
                 </div>
-
-                <!-- Transcript / Summary Notes -->
-                <div>
-                    <label class="block text-xs font-bold text-pink-900 mb-1.5 uppercase tracking-wide">
-                        Transcript / Turn Summary
-                    </label>
-                    <textarea 
-                        rows="4" 
-                        placeholder="Enter caller turn details or notes here..." 
-                        required
-                        class="glass-input w-full p-4 rounded-2xl text-gray-800 text-sm font-medium resize-none"
-                    ></textarea>
-                </div>
-
-                <!-- Submit Button -->
-                <button 
-                    type="submit" 
-                    class="gradient-btn w-full py-4 text-white font-bold rounded-2xl shadow-lg cursor-pointer flex items-center justify-center gap-2 mt-2"
-                >
-                    <span>Log Call Record</span>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                </button>
-            </form>
-
-            <div class="mt-6 text-center text-xs text-gray-500 font-medium">
-                Click anywhere on the screen for bubble magic ✨
             </div>
+            <div class="flex items-center gap-3">
+                <div id="bannerMoodTag" class="px-3 py-1 rounded-full text-xs font-bold text-white bg-orange-500 shadow-sm">
+                    Mood: Hesitant
+                </div>
+                <div class="flex items-center gap-2 bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold border border-emerald-300 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-emerald-600"></span>
+                    Call Active
+                </div>
+            </div>
+        </div>
+
+        <!-- 6 Stage Tabs Header (Stage 0: Prospect Details + 5 Active Stages) -->
+        <div class="glass-card rounded-2xl p-2 overflow-x-auto">
+            <div class="flex space-x-2 min-w-max" id="tabContainer">
+                <!-- Tab buttons generated dynamically -->
+            </div>
+        </div>
+
+        <!-- TAB CONTENT CONTAINERS -->
+        <div id="tabContentArea" class="glass-card rounded-3xl p-6 sm:p-8 space-y-6 overflow-visible">
+
+            <!-- TAB 0: PROSPECT DETAILS -->
+            <div id="tabContent-0" class="tab-pane space-y-6">
+                <div class="border-b border-pink-200/60 pb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Prospect Qualification Details</h2>
+                    <p class="text-xs text-gray-600 mt-1">Select whether this is a new or existing prospect before launching the call Logger.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- New Prospect Toggle -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-3">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Is this a new prospect?</label>
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700">
+                                <input type="radio" name="isNewProspect" value="yes" class="accent-pink-600" onchange="toggleProspectMode('yes')"> Yes
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-gray-700">
+                                <input type="radio" name="isNewProspect" value="no" class="accent-pink-600" onchange="toggleProspectMode('no')"> No (Existing Company)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Company Name Box -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-2 relative">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Company Name</label>
+                        <div id="companyInputContainer" class="relative">
+                            <input type="text" id="inputCompanyName" placeholder="Select 'Is this a new prospect?' first" disabled class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none" autocomplete="off">
+                            <div id="dropdownCompanyList" class="absolute left-0 right-0 top-full mt-1 z-50 max-h-48 overflow-y-auto space-y-1 text-xs hidden bg-white shadow-xl p-2 rounded-xl border border-pink-200"></div>
+                        </div>
+                    </div>
+
+                    <!-- Prospect Name Box -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Prospect Name</label>
+                        <input type="text" id="inputProspectName" placeholder="e.g. Rajesh Sharma" oninput="validateProspectTab()" class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+
+                    <!-- Prospect Role Box -->
+                    <div class="glass-panel p-5 rounded-2xl space-y-2">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Prospect Role</label>
+                        <input type="text" id="inputProspectRole" placeholder="e.g. Managing Director / Plant Head" oninput="validateProspectTab()" class="w-full px-3 py-2 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400">
+                    </div>
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="flex justify-end pt-4 border-t border-pink-200/50">
+                    <button id="btnProceedTab0" disabled onclick="nextTab()" class="gradient-btn px-8 py-3 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-2">
+                        <span>Proceed to Stage 1: The Start</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- DYNAMIC ACTIVE STAGES 1 TO 5 CONTAINER -->
+            <div id="activeStagesContainer"></div>
+
         </div>
     </div>
 
-    <!-- Interactive Canvas Logic -->
+    <!-- Script Execution -->
+    <script>
+        const BACKEND_URL = 'https://caller-screens.onrender.com';
+
+        const stagesConfig = [
+            { id: 0, title: "Prospect Details" },
+            { id: 1, title: "1) The Start" },
+            { id: 2, title: "2) Reason for Calling & Time Permission" },
+            { id: 3, title: "3) Current Needs & Future Plans" },
+            { id: 4, title: "4) Consent for the Next Step" },
+            { id: 5, title: "5) Call Closure" }
+        ];
+
+        let currentTab = 0;
+        let prospectData = { 
+            isNew: '', 
+            company: '', 
+            name: '', 
+            role: '', 
+            moodIndex: 1, 
+            isExistingCompanySelected: false,
+            selectedResponses: {} // Internal storage for clicked responses per stage
+        };
+        let cachedCompanies = [];
+
+        const moodMap = {
+            0: { name: "Disinterested", fillClass: "bg-red-500", handleColor: "#ef4444", percent: 0 },
+            1: { name: "Hesitant", fillClass: "bg-orange-500", handleColor: "#f97316", percent: 33.3 },
+            2: { name: "Neutral", fillClass: "bg-yellow-500", handleColor: "#eab308", percent: 66.6 },
+            3: { name: "Receptive", fillClass: "bg-emerald-500", handleColor: "#22c55e", percent: 100 }
+        };
+
+        // Render Tabs Header
+        function renderTabs() {
+            const container = document.getElementById('tabContainer');
+            container.innerHTML = stagesConfig.map((stage, idx) => `
+                <button onclick="switchTab(${idx})" id="tabBtn-${idx}" class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${idx === 0 ? 'bg-pink-600 text-white shadow-md' : 'bg-white/50 text-gray-600 hover:bg-white/80'}">
+                    ${stage.title}
+                </button>
+            `).join('');
+
+            renderActiveStagesHTML();
+        }
+
+        function renderActiveStagesHTML() {
+            const container = document.getElementById('activeStagesContainer');
+            container.innerHTML = [1, 2, 3, 4, 5].map(stageId => `
+                <div id="tabContent-${stageId}" class="tab-pane hidden space-y-6">
+                    <!-- Guidance Banner -->
+                    <div id="stageGuidance-${stageId}" class="p-4 rounded-2xl bg-gradient-to-r from-pink-100/80 to-blue-100/80 border border-white text-xs text-pink-900 font-semibold leading-relaxed"></div>
+
+                    <!-- Main Interactive Playbook Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+                        <!-- Mood Slider Panel (Carried Forward) -->
+                        <div class="md:col-span-4 glass-panel p-5 rounded-2xl flex flex-col items-center space-y-3 text-center">
+                            <label class="text-[11px] font-extrabold text-pink-800 uppercase tracking-wider">PROSPECT MOOD</label>
+                            <div class="flex items-center justify-center gap-6 my-2 w-full px-2">
+                                <div id="spectrumTrack-${stageId}" class="spectrum-track-el relative w-3 h-[220px] bg-gray-200 rounded-full cursor-pointer flex flex-col justify-end" data-stage="${stageId}">
+                                    <div id="spectrumFill-${stageId}" class="w-full bg-orange-500 rounded-full transition-all duration-200" style="height: 33.3%;"></div>
+                                    <div id="spectrumThumb-${stageId}" class="absolute left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-pink-500 border-4 border-white shadow-md cursor-grab transition-all" style="bottom: calc(33.3% - 12px);"></div>
+                                </div>
+                                <div class="flex flex-col justify-between h-[220px] text-xs font-bold text-left py-1">
+                                    <span class="text-emerald-600 hover:opacity-80 cursor-pointer" onclick="setMood(3)">Receptive</span>
+                                    <span class="text-yellow-600 hover:opacity-80 cursor-pointer" onclick="setMood(2)">Neutral</span>
+                                    <span class="text-orange-600 hover:opacity-80 cursor-pointer" onclick="setMood(1)">Hesitant</span>
+                                    <span class="text-red-600 hover:opacity-80 cursor-pointer" onclick="setMood(0)">Disinterested</span>
+                                </div>
+                            </div>
+                            <div id="sentimentBadge-${stageId}" class="w-full py-2 px-3 rounded-2xl text-xs font-bold text-white bg-orange-500 shadow-sm transition-all text-center">
+                                Hesitant
+                            </div>
+                        </div>
+
+                        <!-- Expected Responses Grid -->
+                        <div class="md:col-span-8 space-y-4">
+                            <div class="text-xs font-bold text-gray-700 flex justify-between items-center">
+                                <span>Expected Prospect Response:</span>
+                                <span class="text-[10px] text-pink-600 font-normal">*Click a response to record selection</span>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="prospectResponsesGrid-${stageId}"></div>
+
+                            <!-- Acknowledgment Box -->
+                            <div id="callerReplyBox-${stageId}" class="hidden p-5 rounded-2xl bg-white/90 border-2 border-pink-400 space-y-3 shadow-md">
+                                <div class="text-[10px] font-black text-pink-700 uppercase tracking-widest flex items-center gap-1">
+                                    <span id="replyBoxTitle-${stageId}">🎯 Stage Guidance</span>
+                                </div>
+                                <div id="callerNoteBox-${stageId}" class="hidden p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-semibold">
+                                    📌 <strong class="text-amber-800">Note:</strong> <span id="callerNoteText-${stageId}"></span>
+                                </div>
+                                <p id="callerReplyText-${stageId}" class="text-xs text-gray-800 font-medium leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Caller Notes Box (Purely manual user inputs) -->
+                    <div class="glass-panel p-4 rounded-2xl space-y-2">
+                        <label class="text-xs font-bold text-pink-700 uppercase">Stage ${stageId} Manual Caller Notes</label>
+                        <textarea id="notesStage${stageId}" rows="3" placeholder="Write down key takeaways, customer inputs, or strategic notes..." class="w-full p-3 rounded-xl bg-white/80 border border-white text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-400"></textarea>
+                    </div>
+
+                    <!-- Stage Navigation Controls -->
+                    <div class="flex items-center justify-between pt-4 border-t border-pink-200/50">
+                        <button onclick="endCall()" class="px-5 py-2.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs border border-red-300 transition-all cursor-pointer">
+                            End Call
+                        </button>
+                        ${stageId < 5 ? `
+                            <button onclick="nextTab()" class="gradient-btn px-8 py-3 text-white font-bold text-xs rounded-xl shadow-md cursor-pointer flex items-center gap-2">
+                                <span>Proceed to Stage ${stageId + 1}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+
+            bindDragEvents();
+        }
+
+        function switchTab(tabIdx) {
+            if (tabIdx > 0 && !isProspectValid()) {
+                alert('Please complete all Prospect Details first!');
+                return;
+            }
+
+            document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tabContent-${tabIdx}`).classList.remove('hidden');
+
+            stagesConfig.forEach((_, idx) => {
+                const btn = document.getElementById(`tabBtn-${idx}`);
+                if (idx === tabIdx) {
+                    btn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-pink-600 text-white shadow-md';
+                } else {
+                    btn.className = 'px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap bg-white/50 text-gray-600 hover:bg-white/80';
+                }
+            });
+
+            currentTab = tabIdx;
+
+            const banner = document.getElementById('onCallBanner');
+            if (tabIdx > 0) {
+                banner.classList.remove('hidden');
+                document.getElementById('bannerCompanyName').innerText = prospectData.company;
+                document.getElementById('bannerProspectName').innerText = prospectData.name;
+                document.getElementById('bannerProspectRole').innerText = `(${prospectData.role})`;
+
+                const typeBadge = document.getElementById('bannerProspectTypeBadge');
+                if (typeBadge) {
+                    typeBadge.innerText = prospectData.isNew === 'no' ? 'Existing Contact' : 'New Prospect';
+                    typeBadge.className = prospectData.isNew === 'no' 
+                        ? 'px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 text-[9px] font-black uppercase' 
+                        : 'px-2 py-0.5 rounded-md bg-blue-100 text-blue-800 text-[9px] font-black uppercase';
+                }
+
+                updateStageGuidance(tabIdx);
+                setMood(prospectData.moodIndex);
+            } else {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function updateStageGuidance(stageId) {
+            const el = document.getElementById(`stageGuidance-${stageId}`);
+            if (!el) return;
+
+            const isExisting = prospectData.isNew === 'no';
+
+            const guidanceMap = {
+                1: isExisting 
+                    ? `💡 <strong>Stage Focus (Existing Contact):</strong> Remind them subtly of who you are and previous conversations. Do not re-explain basic services.`
+                    : `💡 <strong>Stage Focus (New Prospect):</strong> State who you are and introduce Meridian Growth Partners clearly. Offer a tailored sample growth report to help them realize their full potential.`,
+                2: isExisting 
+                    ? `💡 <strong>Stage Focus (Existing Contact):</strong> State your exact reason for calling and request brief permission for their time. Touch upon past context smoothly without re-explaining company identity.`
+                    : `💡 <strong>Stage Focus (New Prospect):</strong> Clearly state the exact reason for calling, explaining specifically how Meridian Growth Partners assists manufacturing operations, and ask for permission to discuss their growth needs.`,
+                3: `💡 <strong>Stage Focus:</strong> Ask discovery questions regarding their current operations, capacity, and future expansion plans. Listen closely and log key details.`,
+                4: `💡 <strong>Stage Focus:</strong> Introduce the next step: a strategic session with the Founder of Meridian Growth Partners for a detailed sectoral analysis & roadmap. Seek their consent.`,
+                5: `💡 <strong>Stage Focus:</strong> Finalize logistical details for the next step (meeting dates or report dispatch via WhatsApp/email) and close the call with a firm thank you.`
+            };
+
+            el.innerHTML = guidanceMap[stageId] || '';
+        }
+
+        function nextTab() {
+            if (currentTab < stagesConfig.length - 1) {
+                switchTab(currentTab + 1);
+            }
+        }
+
+        // Prospect Qualification Validation
+        async function toggleProspectMode(mode) {
+            prospectData.isNew = mode;
+            prospectData.isExistingCompanySelected = false;
+            const input = document.getElementById('inputCompanyName');
+            const dropdown = document.getElementById('dropdownCompanyList');
+
+            if (mode === 'yes') {
+                input.value = '';
+                input.disabled = false;
+                input.placeholder = "Type new company name...";
+                dropdown.classList.add('hidden');
+            } else {
+                input.value = '';
+                input.disabled = false;
+                input.placeholder = "Click or type to search existing companies...";
+                if (cachedCompanies.length === 0) {
+                    try {
+                        const res = await fetch(`${BACKEND_URL}/api/calls/filter-options/company_name`);
+                        const data = await res.json();
+                        cachedCompanies = data.options || [];
+                    } catch (e) {
+                        console.error('Failed to load companies:', e);
+                    }
+                }
+            }
+            validateProspectTab();
+        }
+
+        const companyInput = document.getElementById('inputCompanyName');
+        const companyDropdown = document.getElementById('dropdownCompanyList');
+
+        companyInput.addEventListener('focus', () => {
+            if (prospectData.isNew === 'no') showCompanyDropdown(cachedCompanies);
+        });
+
+        companyInput.addEventListener('input', () => {
+            if (prospectData.isNew === 'no') {
+                const currentVal = companyInput.value.trim();
+                const exactMatch = cachedCompanies.find(c => String(c).toLowerCase() === currentVal.toLowerCase());
+                prospectData.isExistingCompanySelected = !!exactMatch;
+
+                const filtered = cachedCompanies.filter(c => String(c).toLowerCase().includes(currentVal.toLowerCase()));
+                showCompanyDropdown(filtered);
+            } else {
+                prospectData.isExistingCompanySelected = false;
+            }
+            validateProspectTab();
+        });
+
+        function showCompanyDropdown(list) {
+            companyDropdown.innerHTML = '';
+            if (list.length === 0) {
+                companyDropdown.classList.add('hidden');
+                return;
+            }
+            companyDropdown.classList.remove('hidden');
+            list.slice(0, 20).forEach(comp => {
+                const div = document.createElement('div');
+                div.className = 'px-3 py-1.5 hover:bg-pink-100 rounded-lg cursor-pointer text-gray-800 font-medium text-xs';
+                div.innerText = comp;
+                div.addEventListener('click', () => {
+                    companyInput.value = comp;
+                    prospectData.isExistingCompanySelected = true;
+                    companyDropdown.classList.add('hidden');
+                    validateProspectTab();
+                });
+                companyDropdown.appendChild(div);
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!companyInput.contains(e.target) && !companyDropdown.contains(e.target)) {
+                companyDropdown.classList.add('hidden');
+            }
+        });
+
+        function validateProspectTab() {
+            const nameInput = document.getElementById('inputProspectName');
+            const roleInput = document.getElementById('inputProspectRole');
+
+            prospectData.company = companyInput ? companyInput.value.trim() : '';
+            prospectData.name = nameInput ? nameInput.value.trim() : '';
+            prospectData.role = roleInput ? roleInput.value.trim() : '';
+
+            const isValid = isProspectValid();
+            document.getElementById('btnProceedTab0').disabled = !isValid;
+        }
+
+        function isProspectValid() {
+            if (prospectData.isNew === '' || prospectData.name === '' || prospectData.role === '' || prospectData.company === '') {
+                return false;
+            }
+            if (prospectData.isNew === 'no') {
+                return prospectData.isExistingCompanySelected || cachedCompanies.some(c => String(c).toLowerCase() === prospectData.company.toLowerCase());
+            }
+            return true;
+        }
+
+        // Global Mood Memory Function
+        function setMood(index) {
+            index = Math.max(0, Math.min(3, index));
+            prospectData.moodIndex = index;
+            const mood = moodMap[index];
+
+            [1, 2, 3, 4, 5].forEach(stageId => {
+                const fill = document.getElementById(`spectrumFill-${stageId}`);
+                const thumb = document.getElementById(`spectrumThumb-${stageId}`);
+                const badge = document.getElementById(`sentimentBadge-${stageId}`);
+
+                if (fill && thumb && badge) {
+                    fill.style.height = `${mood.percent}%`;
+                    fill.className = `w-full rounded-full transition-all duration-200 ${mood.fillClass}`;
+                    thumb.style.bottom = `calc(${mood.percent}% - 12px)`;
+                    thumb.style.borderColor = mood.handleColor;
+
+                    badge.innerText = mood.name;
+                    badge.className = `w-full py-2 px-3 rounded-2xl text-xs font-bold text-white shadow-sm transition-all text-center ${mood.fillClass}`;
+                }
+            });
+
+            const bannerMoodTag = document.getElementById('bannerMoodTag');
+            if (bannerMoodTag) {
+                bannerMoodTag.innerText = `Mood: ${mood.name}`;
+                bannerMoodTag.className = `px-3 py-1 rounded-full text-xs font-bold text-white shadow-sm ${mood.fillClass}`;
+            }
+
+            if (currentTab > 0) {
+                renderStageExpectedResponses(currentTab, index);
+            }
+        }
+
+        let isDragging = false;
+        function bindDragEvents() {
+            document.querySelectorAll('.spectrum-track-el').forEach(track => {
+                const handleMove = (e) => {
+                    const rect = track.getBoundingClientRect();
+                    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+                    if (!clientY) return;
+                    let ratio = Math.max(0, Math.min(1, (rect.bottom - clientY) / rect.height));
+                    setMood(Math.round(ratio * 3));
+                };
+
+                track.addEventListener('mousedown', (e) => { isDragging = true; handleMove(e); });
+                track.addEventListener('touchstart', (e) => { isDragging = true; handleMove(e); });
+            });
+
+            window.addEventListener('mousemove', (e) => { if (isDragging) { handlePointerMoveGlobal(e); } });
+            window.addEventListener('touchmove', (e) => { if (isDragging) { handlePointerMoveGlobal(e); } });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+            window.addEventListener('touchend', () => { isDragging = false; });
+        }
+
+        function handlePointerMoveGlobal(e) {
+            const activeTrack = document.getElementById(`spectrumTrack-${currentTab}`);
+            if (!activeTrack) return;
+            const rect = activeTrack.getBoundingClientRect();
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            if (!clientY) return;
+            let ratio = Math.max(0, Math.min(1, (rect.bottom - clientY) / rect.height));
+            setMood(Math.round(ratio * 3));
+        }
+
+        // Stage Playbook Matrix
+        function getStagePlaybook(stageId, moodKey) {
+            const comp = prospectData.company || "your business";
+            const name = prospectData.name ? prospectData.name.split(' ')[0] : 'Sir/Madam';
+            const isExisting = prospectData.isNew === 'no';
+
+            if (stageId === 1) {
+                if (isExisting) {
+                    return [
+                        { p: "Come again? Who is this?", c: `This is <Your Name> calling from Meridian Growth Partners, ${name}. We spoke previously regarding strategic growth initiatives for ${comp}.`, note: null },
+                        { p: "Okay, go ahead.", c: `Great! I'm following up on our previous discussion regarding ${comp}.`, note: "Briefly remind the prospect of where you left off in your last conversation and continue seamlessly." },
+                        { p: "Why are you calling?", c: `I am following up on our previous interaction regarding your expansion plans at ${comp}.`, note: "Briefly remind the prospect of where you left off in your last conversation and ask to continue from that point." },
+                        { p: "I'm busy right now.", c: `I completely understand, ${name}. When would be a suitable time today or tomorrow to set up a quick 5-minute call?`, note: null }
+                    ];
+                } else {
+                    const matrixNew = {
+                        0: [
+                            { p: "Come again? Who is this?", c: `I am <Your Name> calling from Meridian Growth Partners. I will take just 30 seconds to share a customized sample growth report specifically structured for ${comp} to help you identify untapped expansion opportunities.` },
+                            { p: "Okay, go ahead.", c: `Thank you. At Meridian Growth Partners, we prepare sector-specific growth reports and market research for Indian manufacturers. I'd love to share a complimentary sample benchmarked for ${comp}.` },
+                            { p: "Why are you calling?", c: `I am reaching out to share a sample growth report tailored to ${comp} and your manufacturing sector to help you realize your business's full growth potential.` },
+                            { p: "I'm busy right now.", c: `I completely understand. I can drop a quick 2-page sample growth report tailored to ${comp} via WhatsApp or email so you can evaluate it at your convenience.` }
+                        ],
+                        1: [
+                            { p: "Come again? Who is this?", c: `This is <Your Name> with Meridian Growth Partners. We provide specialized growth consultancy and market research for Indian manufacturing leaders.` },
+                            { p: "Okay, go ahead.", c: `Appreciate it! I am calling to offer ${comp} a tailored sample growth and market research report, designed to highlight key operational and revenue expansion opportunities.` },
+                            { p: "Why are you calling?", c: `I am reaching out to share a sample growth report tailored to ${comp} and your sector of operations, helping you unlock new growth channels and improve market positioning.` },
+                            { p: "I'm busy right now.", c: `No worries at all. May I email a brief sample growth report tailored for ${comp}? You can glance through it in 2 minutes whenever you are free.` }
+                        ],
+                        2: [
+                            { p: "Come again? Who is this?", c: `This is <Your Name> calling from Meridian Growth Partners. We partner with mid-sized manufacturing firms across India to deliver growth strategy and research insights.` },
+                            { p: "Okay, go ahead.", c: `Great! We have prepared a sample growth report tailored to your business and sector. It covers market positioning and growth levers designed to maximize your potential.` },
+                            { p: "Why are you calling?", c: `I wanted to share a sample growth and research report customized for ${comp}, demonstrating how our strategic advisory helps manufacturers scale efficiently.` },
+                            { p: "I'm busy right now.", c: `Understood! Let me send our sector-specific sample growth report directly to your email so you can see the tailored benchmarks we built for ${comp}.` }
+                        ],
+                        3: [
+                            { p: "Come again? Who is this?", c: `This is <Your Name> from Meridian Growth Partners! We specialize in growth consultancy and allied research services for manufacturing firms in India.` },
+                            { p: "Okay, go ahead.", c: `Fantastic! I am reaching out to share a sample growth report that is tailored specifically to ${comp} and your sector of operations to help you realize your full growth potential.` },
+                            { p: "Why are you calling?", c: `I am reaching out to share a customized growth report tailored to ${comp}. It outlines actionable market research insights to help accelerate your expansion.` },
+                            { p: "I'm busy right now.", c: `I appreciate your time! I can immediately send our tailored sample growth report to your inbox so we can discuss the specific growth levers for ${comp} whenever convenient.` }
+                        ]
+                    };
+                    return matrixNew[moodKey] || matrixNew[1];
+                }
+            }
+
+            if (stageId === 2) {
+                const responsesByMood = {
+                    0: [
+                        { p: "We already have internal strategy teams.", log: "Prospect stated they have existing internal strategy teams." },
+                        { p: "Not interested in any consultancy right now.", log: "Prospect expressed disinterest in consultancy services." },
+                        { p: "Just email the details, I don't have time.", log: "Prospect requested details strictly via email due to time constraints." },
+                        { p: "How much is this going to cost us?", log: "Prospect immediately asked about cost structures." }
+                    ],
+                    1: [
+                        { p: "How long will this discussion take?", log: "Prospect asked for call duration before granting time." },
+                        { p: "Send me something on WhatsApp first.", log: "Prospect requested initial overview on WhatsApp." },
+                        { p: "Is this related to sales or funding?", log: "Prospect inquired about the exact scope of the call." },
+                        { p: "Call me back later in the week.", log: "Prospect asked to reschedule for later in the week." }
+                    ],
+                    2: [
+                        { p: "Sure, you have 2 minutes, go ahead.", log: "Prospect granted 2 minutes for initial explanation." },
+                        { p: "What specific manufacturing sectors do you cover?", log: "Prospect asked about sector specializations." },
+                        { p: "Have you worked with firms similar to ours?", log: "Prospect asked for relevant industry case studies." },
+                        { p: "Alright, tell me what you have in mind.", log: "Prospect agreed to listen to the reason for calling." }
+                    ],
+                    3: [
+                        { p: "Yes, we are actively looking for growth insights right now.", log: "Prospect confirmed active interest in growth insights." },
+                        { p: "Glad you called. What areas of operations do you analyze?", log: "Prospect enthusiastically asked about operational analysis scope." },
+                        { p: "Sure, I have time right now, let's talk.", log: "Prospect granted full permission to proceed." },
+                        { p: "Sounds relevant. How do we get started?", log: "Prospect asked about engagement steps immediately." }
+                    ]
+                };
+                return responsesByMood[moodKey] || responsesByMood[1];
+            }
+
+            if (stageId === 3) {
+                const responsesByMood = {
+                    0: [
+                        { p: "I am not comfortable sharing internal operational data.", log: "Prospect declined to share operational details." },
+                        { p: "Our plans are confidential at this stage.", log: "Prospect cited confidentiality regarding future expansion." },
+                        { p: "Why do you need to know our capacity numbers?", log: "Prospect questioned the need for capacity figures." },
+                        { p: "We are currently satisfied with our status quo.", log: "Prospect indicated no current plans for expansion." }
+                    ],
+                    1: [
+                        { p: "We are expanding, but I can only give broad numbers.", log: "Prospect shared general expansion intent with limited metrics." },
+                        { p: "What exact information do you need from my end?", log: "Prospect asked for a specific list of required inputs." },
+                        { p: "We face raw material price fluctuations mostly.", log: "Prospect highlighted supply chain and material cost pressure." },
+                        { p: "Can you send a NDA before we share detailed plans?", log: "Prospect requested a Non-Disclosure Agreement." }
+                    ],
+                    2: [
+                        { p: "We are planning a new plant unit in the next fiscal year.", log: "Prospect disclosed plans for a new plant unit next fiscal year." },
+                        { p: "Our current challenge is market distribution and capacity utilization.", log: "Prospect cited distribution and utilization challenges." },
+                        { p: "We are aiming for 20% YoY revenue growth.", log: "Prospect shared a 20% YoY target growth rate." },
+                        { p: "We currently operate at 75% capacity.", log: "Prospect noted current plant capacity at 75%." }
+                    ],
+                    3: [
+                        { p: "Let me explain our complete 3-year roadmap and bottleneck areas.", log: "Prospect shared detailed 3-year roadmap and key bottlenecks." },
+                        { p: "We are looking to diversify into export markets actively.", log: "Prospect highlighted export market diversification goals." },
+                        { p: "I can share our product category breakdown with you.", log: "Prospect offered product category breakdown data." },
+                        { p: "Our main bottleneck is scaling our distribution network across states.", log: "Prospect identified interstate distribution as primary bottleneck." }
+                    ]
+                };
+                return responsesByMood[moodKey] || responsesByMood[1];
+            }
+
+            if (stageId === 4) {
+                const responsesByMood = {
+                    0: [
+                        { p: "Not interested in a meeting right now.", log: "Prospect declined meeting with Meridian Founder." },
+                        { p: "Just email the report, no meeting needed.", log: "Prospect asked for report via email without setting a meeting." },
+                        { p: "I am not sure when I will be free next.", log: "Prospect indicated uncertainty in calendar availability." },
+                        { p: "Send a proposal first, then we will decide.", log: "Prospect requested proposal prior to scheduling." }
+                    ],
+                    1: [
+                        { p: "I am quite busy this week, drop a WhatsApp message.", log: "Prospect asked to share meeting details on WhatsApp." },
+                        { p: "Can my team attend instead of me?", log: "Prospect asked if delegate team members could join." },
+                        { p: "What will be covered in this session with your Founder?", log: "Prospect asked for agenda details for Founder session." },
+                        { p: "Check back with me next Tuesday.", log: "Prospect asked to follow up next week to confirm date." }
+                    ],
+                    2: [
+                        { p: "Sure, let's schedule a brief 20-minute Zoom call.", log: "Prospect agreed to a 20-minute online Founder session." },
+                        { p: "Share your Founder's calendar link via email.", log: "Prospect requested Founder's calendar scheduling link." },
+                        { p: "Thursday afternoon works for me. Confirm time.", log: "Prospect suggested Thursday afternoon for meeting." },
+                        { p: "Send an invite to my email ID.", log: "Prospect asked to send calendar invite to email." }
+                    ],
+                    3: [
+                        { p: "Excellent! I would love to sit through the sectoral analysis. Let's fix a date.", log: "Prospect enthusiastically accepted Founder session." },
+                        { p: "Can we do an in-person meeting at our office?", log: "Prospect invited Founder for an in-person office meeting." },
+                        { p: "I will include my Director in the discussion as well.", log: "Prospect confirmed decision-maker inclusion in meeting." },
+                        { p: "Lock in Friday morning 11 AM for our roadmap review.", log: "Prospect confirmed Friday 11 AM for session." }
+                    ]
+                };
+                return responsesByMood[moodKey] || responsesByMood[1];
+            }
+
+            if (stageId === 5) {
+                return [
+                    { p: "Thank you, looking forward to receiving the calendar invite.", log: "Call closed smoothly; calendar invite requested." },
+                    { p: "Please send the summary report on WhatsApp as promised.", log: "Call closed; requested WhatsApp summary dispatch." },
+                    { p: "Thanks for your time. Have a good day.", log: "Call closed politely with good wishes." },
+                    { p: "Got it. We will connect as scheduled.", log: "Call closed with firm meeting commitment." }
+                ];
+            }
+
+            return [];
+        }
+
+        function renderStageExpectedResponses(stageId, moodKey) {
+            const grid = document.getElementById(`prospectResponsesGrid-${stageId}`);
+            if (!grid) return;
+
+            const responses = getStagePlaybook(stageId, moodKey);
+            grid.innerHTML = responses.map((item, idx) => `
+                <div onclick="selectStageResponse(${stageId}, ${moodKey}, ${idx})" class="p-3 rounded-xl bg-white/80 hover:bg-pink-100/80 border border-white cursor-pointer transition-all shadow-sm">
+                    <div class="text-[10px] font-bold text-pink-700 uppercase mb-1">Prospect Statement</div>
+                    <p class="text-xs text-gray-800 font-medium">"${item.p}"</p>
+                </div>
+            `).join('');
+
+            const replyBox = document.getElementById(`callerReplyBox-${stageId}`);
+            if (replyBox) replyBox.classList.add('hidden');
+        }
+
+        function selectStageResponse(stageId, moodKey, responseIdx) {
+            const responses = getStagePlaybook(stageId, moodKey);
+            const item = responses[responseIdx];
+
+            // Record ONLY mood and prospect_statement for each stage in the JSON payload
+            prospectData.selectedResponses[`stage_${stageId}`] = {
+                mood: moodMap[moodKey].name,
+                prospect_statement: item.p
+            };
+
+            // UI Display updates (remains fully functional on screen)
+            const replyBox = document.getElementById(`callerReplyBox-${stageId}`);
+            const replyText = document.getElementById(`callerReplyText-${stageId}`);
+            const noteBox = document.getElementById(`callerNoteBox-${stageId}`);
+            const noteText = document.getElementById(`callerNoteText-${stageId}`);
+            const title = document.getElementById(`replyBoxTitle-${stageId}`);
+
+            if (stageId === 1) {
+                title.innerText = "🎯 Tailored Reply — Meridian Growth Partners";
+                replyText.innerText = item.c;
+                if (item.note) {
+                    noteText.innerText = item.note;
+                    noteBox.classList.remove('hidden');
+                } else {
+                    noteBox.classList.add('hidden');
+                }
+            } else {
+                // Stages 2 to 5: Display Acknowledgment visually WITHOUT altering caller notes textarea
+                title.innerText = `📌 Prospect Statement Logged (Stage ${stageId})`;
+                replyText.innerText = `Recorded Choice: "${item.p}"`;
+                noteBox.classList.add('hidden');
+            }
+
+            replyBox.classList.remove('hidden');
+        }
+
+        async function endCall() {
+            if (!confirm("Are you sure you want to end this call and save logs?")) return;
+
+            // Gather all manual notes from textareas
+            const stageNotes = {
+                stage_1: document.getElementById('notesStage1')?.value || '',
+                stage_2: document.getElementById('notesStage2')?.value || '',
+                stage_3: document.getElementById('notesStage3')?.value || '',
+                stage_4: document.getElementById('notesStage4')?.value || '',
+                stage_5: document.getElementById('notesStage5')?.value || ''
+            };
+
+            // Build payload matching your Supabase table schema
+            const payload = {
+                employee_id: localStorage.getItem('employee_id') || 'EMP_DEMO',
+                company_name: prospectData.company,
+                prospect_name: prospectData.name,
+                prospect_role: prospectData.role,
+                is_new_prospect: prospectData.isNew,
+                final_stage_reached: currentTab,
+                final_mood: moodMap[prospectData.moodIndex].name,
+                stage_notes: stageNotes,
+                selected_responses: prospectData.selectedResponses
+            };
+
+            try {
+                // UI feedback
+                const endCallBtns = document.querySelectorAll("button[onclick='endCall()']");
+                endCallBtns.forEach(b => {
+                    b.innerText = "Saving logs...";
+                    b.disabled = true;
+                });
+
+                const response = await fetch(`${BACKEND_URL}/api/calls/save-log`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to save call log.');
+                }
+
+                alert(`Call logged successfully! ID: ${result.call_logger_id}`);
+                window.location.href = '/dashboard.html';
+            } catch (error) {
+                console.error('Error saving call log:', error);
+                alert(`Error saving call log: ${error.message}`);
+                
+                // Reset buttons if it fails
+                const endCallBtns = document.querySelectorAll("button[onclick='endCall()']");
+                endCallBtns.forEach(b => {
+                    b.innerText = "End Call";
+                    b.disabled = false;
+                });
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTabs();
+            setMood(1);
+        });
+    </script>
+
+    <!-- Canvas Bubble Background Script -->
     <script>
         const canvas = document.getElementById('bubbleCanvas');
         const ctx = canvas.getContext('2d');
-
         let width = canvas.width = window.innerWidth;
         let height = canvas.height = window.innerHeight;
 
@@ -200,144 +792,51 @@
         });
 
         const bubbles = [];
-        const particles = [];
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playPopSound() {
-            try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400 + Math.random() * 300, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(800 + Math.random() * 200, audioCtx.currentTime + 0.08);
-                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.08);
-            } catch (e) {}
-        }
-
         class Bubble {
-            constructor(x, y, isInteractive = false) {
+            constructor(x, y) {
                 this.x = x || Math.random() * width;
-                this.y = y || height + (Math.random() * 50 + 20);
-                this.radius = isInteractive ? Math.random() * 25 + 15 : Math.random() * 20 + 8;
-                this.speedY = isInteractive ? -(Math.random() * 3 + 2) : -(Math.random() * 1.2 + 0.4);
+                this.y = y || height + 50;
+                this.radius = Math.random() * 20 + 8;
+                this.speedY = -(Math.random() * 1.2 + 0.4);
                 this.speedX = (Math.random() - 0.5) * 1.5;
-                this.alpha = isInteractive ? 0.85 : Math.random() * 0.4 + 0.2;
+                this.alpha = Math.random() * 0.4 + 0.2;
                 this.colorHue = Math.random() > 0.4 ? 330 : 210;
-                this.isInteractive = isInteractive;
             }
-
             update() {
                 this.y += this.speedY;
                 this.x += Math.sin(this.y * 0.02) * 0.8 + this.speedX;
-                if (this.isInteractive) this.alpha -= 0.005;
             }
-
             draw() {
                 ctx.save();
                 ctx.globalAlpha = Math.max(0, this.alpha);
-                const grad = ctx.createRadialGradient(
-                    this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1, 
-                    this.x, this.y, this.radius
-                );
+                const grad = ctx.createRadialGradient(this.x - this.radius * 0.3, this.y - this.radius * 0.3, this.radius * 0.1, this.x, this.y, this.radius);
                 grad.addColorStop(0, `hsla(${this.colorHue}, 100%, 95%, 0.9)`);
                 grad.addColorStop(0.6, `hsla(${this.colorHue}, 90%, 70%, 0.4)`);
                 grad.addColorStop(1, `hsla(${this.colorHue + 20}, 90%, 60%, 0.1)`);
-
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = grad;
                 ctx.fill();
-
-                ctx.beginPath();
-                ctx.arc(this.x - this.radius * 0.35, this.y - this.radius * 0.35, this.radius * 0.25, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-                ctx.fill();
                 ctx.restore();
             }
         }
 
-        class Particle {
-            constructor(x, y) {
-                this.x = x;
-                this.y = y;
-                this.radius = Math.random() * 4 + 2;
-                const angle = Math.random() * Math.PI * 2;
-                const speed = Math.random() * 6 + 2;
-                this.vx = Math.cos(angle) * speed;
-                this.vy = Math.sin(angle) * speed;
-                this.alpha = 1;
-                this.colorHue = Math.random() > 0.5 ? 330 : 210;
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.05;
-                this.alpha -= 0.025;
-            }
-
-            draw() {
-                ctx.save();
-                ctx.globalAlpha = Math.max(0, this.alpha);
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `hsl(${this.colorHue}, 100%, 75%)`;
-                ctx.fill();
-                ctx.restore();
-            }
-        }
-
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 20; i++) {
             const b = new Bubble();
             b.y = Math.random() * height;
             bubbles.push(b);
         }
 
-        window.addEventListener('click', (e) => {
-            playPopSound();
-            const spawnCount = Math.floor(Math.random() * 3) + 3;
-            for (let i = 0; i < spawnCount; i++) {
-                bubbles.push(new Bubble(
-                    e.clientX + (Math.random() - 0.5) * 20, 
-                    e.clientY + (Math.random() - 0.5) * 20, 
-                    true
-                ));
-            }
-            for (let i = 0; i < 10; i++) {
-                particles.push(new Particle(e.clientX, e.clientY));
-            }
-        });
-
         function animate() {
             ctx.clearRect(0, 0, width, height);
-
-            if (bubbles.length < 35 && Math.random() < 0.1) {
-                bubbles.push(new Bubble());
-            }
-
+            if (bubbles.length < 30 && Math.random() < 0.1) bubbles.push(new Bubble());
             for (let i = bubbles.length - 1; i >= 0; i--) {
-                const b = bubbles[i];
-                b.update();
-                b.draw();
-                if (b.y < -50 || b.alpha <= 0) bubbles.splice(i, 1);
+                bubbles[i].update();
+                bubbles[i].draw();
+                if (bubbles[i].y < -50) bubbles.splice(i, 1);
             }
-
-            for (let i = particles.length - 1; i >= 0; i--) {
-                const p = particles[i];
-                p.update();
-                p.draw();
-                if (p.alpha <= 0) particles.splice(i, 1);
-            }
-
             requestAnimationFrame(animate);
         }
-
         window.onload = animate;
     </script>
 </body>
