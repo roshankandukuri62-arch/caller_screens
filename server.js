@@ -35,10 +35,12 @@ app.get('/', (req, res) => {
 // Import Routers
 const authRouter = require('./routes/auth');
 const callsRouter = require('./routes/calls');
+const simulatorRouter = require('./routes/simulator'); // Added simulator router import
 
 // Mount Routers
-app.use('/api', authRouter);       
+app.use('/api', authRouter);        
 app.use('/api/calls', callsRouter); 
+app.use('/api/simulator', simulatorRouter); // Mounted simulator routes
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
