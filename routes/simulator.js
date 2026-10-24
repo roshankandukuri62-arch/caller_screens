@@ -154,36 +154,32 @@ You can choose to end the conversation whenever depending on your assigned mood 
     }
 });
 
-// 5. Chat Interaction Endpoint
+// 5. Chat Interaction Endpoint (Using single-turn full context construction for maximum stability)
 router.post('/chat', async (req, res) => {
     const { systemPrompt, chatHistory, userMessage } = req.body;
 
     try {
-        const formattedHistory = [
-            { role: 'user', parts: [{ text: `SYSTEM INSTRUCTIONS:\n${systemPrompt}` }] },
-            { role: 'model', parts: [{ text: "Understood. I will act as the prospect according to these parameters. Please begin the call." }] }
-        ];
+        if (!process.env.LLM_KEY) {
+            throw new Error("LLM_KEY environment variable is missing on the server.");
+        }
 
+        // Build a clean chronological transcript of the conversation so far
+        let fullConversation = `${systemPrompt}\n\n--- LIVE CONVERSATION START ---\n`;
+        
         (chatHistory || []).forEach(turn => {
-            formattedHistory.push({
-                role: turn.sender === 'user' ? 'user' : 'model',
-                parts: [{ text: turn.text }]
-            });
+            const speaker = turn.sender === 'user' ? 'Caller' : 'Prospect';
+            fullConversation += `${speaker}: ${turn.text}\n`;
         });
 
-        formattedHistory.push({
-            role: 'user',
-            parts: [{ text: userMessage }]
-        });
+        fullConversation += `Caller: ${userMessage}\nProspect:`;
 
-        const chat = model.startChat({ history: formattedHistory });
-        const result = await chat.sendMessage(userMessage);
+        const result = await model.generateContent(fullConversation);
         const responseText = result.response.text();
 
-        res.status(200).json({ success: true, reply: responseText });
+        res.status(200).json({ success: true, reply: responseText.trim() });
     } catch (err) {
-        console.error('Gemini API execution error:', err);
-        res.status(500).json({ success: false, error: 'Failed to generate response from Gemini.' });
+        console.error('Gemini API execution error:', err.message || err);
+        res.status(500).json({ success: false, error: err.message || 'Failed to generate response from Gemini.' });
     }
 });
 
