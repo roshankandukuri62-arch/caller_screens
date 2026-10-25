@@ -1,6 +1,6 @@
-# PDGMS - Prospect Data & Growth Management System
+# PDGMS - Caller Intelligence
 
-PDGMS is a comprehensive, full-stack enterprise web application engineered to optimize sales and growth operations. It provides robust tools for employee authentication, tracking manual call interactions, and training sales reps via an AI-powered interactive Call Simulator.
+This project is a comprehensive, full-stack enterprise web application engineered to optimize sales and growth operations. It provides robust tools for employee authentication, tracking manual call interactions, and training sales reps via an AI-powered interactive Call Simulator.
 
 ## 🚀 Live Deployment & Infrastructure URLs
 * **Frontend Application (Vercel):** [https://callerscreensfrontend.vercel.app/](https://callerscreensfrontend.vercel.app/)
