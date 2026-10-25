@@ -134,12 +134,3 @@ CREATE TABLE public.call_logs (
     CONSTRAINT call_logs_pkey PRIMARY KEY (call_logger_id)
 );
 ```
-
----
-
-## ⚙️ Environment Configuration
-
-Ensure the following variables are correctly populated within your deployment dashboards (Render and Vercel):
-* `PORT` = `5000` (Backend runtime port)
-* `SUPABASE_URL` = `your_supabase_project_url`
-* `SUPABASE_ANON_KEY` = `your_supabase_anon_key`
